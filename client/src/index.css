@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    color: #2D2219;
+    background-color: #FFFDF7;
+    overflow-x: hidden;
+    line-height: 1.7;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    line-height: 1.2;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  ::selection {
+    background: #FFE082;
+    color: #2D2219;
+  }
+
+  :focus-visible {
+    outline: 3px solid #FFC107;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 
+           font-semibold px-8 py-3 rounded-full
+           bg-gradient-to-br from-primary-500 to-primary-700 
+           text-warm-text shadow-warm-md
+           hover:shadow-warm-lg hover:-translate-y-0.5
+           transition-all duration-300 ease-out
+           relative overflow-hidden;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 
+           font-semibold px-8 py-3 rounded-full
+           bg-transparent text-warm-text border-2 border-warm-border
+           hover:border-primary-500 hover:bg-primary-50 hover:-translate-y-0.5
+           transition-all duration-300 ease-out;
+  }
+
+  .btn-light {
+    @apply inline-flex items-center justify-center gap-2 
+           font-semibold px-8 py-3 rounded-full
+           bg-white/15 backdrop-blur-sm text-white border border-white/30
+           hover:bg-white/25 hover:-translate-y-0.5
+           transition-all duration-300 ease-out;
+  }
+
+  .section-label {
+    @apply inline-block font-body text-xs font-semibold tracking-widest uppercase
+           text-primary-700 bg-primary-50 px-4 py-1 rounded-full mb-4;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FFFDF7;
+}
+::-webkit-scrollbar-thumb {
+  background: #FFD54F;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FFC107;
+}

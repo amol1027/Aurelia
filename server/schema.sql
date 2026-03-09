@@ -1,0 +1,30 @@
+CREATE DATABASE IF NOT EXISTS aurelia;
+USE aurelia;
+
+DROP TABLE IF EXISTS pets;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  role ENUM('adopter', 'shelter') NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  phone VARCHAR(20),
+  -- Shelter-specific fields
+  shelter_name VARCHAR(200),
+  address TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE pets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  breed VARCHAR(100) NOT NULL,
+  age VARCHAR(50) NOT NULL,
+  personality JSON NOT NULL,
+  image VARCHAR(255) NOT NULL,
+  description TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
