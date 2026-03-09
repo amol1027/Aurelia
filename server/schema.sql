@@ -1,6 +1,7 @@
 CREATE DATABASE IF NOT EXISTS aurelia;
 USE aurelia;
 
+DROP TABLE IF EXISTS favorites;
 DROP TABLE IF EXISTS pets;
 DROP TABLE IF EXISTS users;
 
@@ -26,5 +27,15 @@ CREATE TABLE pets (
   image VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE favorites (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  pet_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_favorite (user_id, pet_id)
 );
 

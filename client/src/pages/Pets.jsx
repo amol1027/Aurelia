@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaPaw, FaClock, FaHeart, FaSearch, FaSignOutAlt } from 'react-icons/fa';
+import { FaPaw, FaClock, FaHeart, FaSearch, FaSignOutAlt, FaUserCircle } from 'react-icons/fa';
+import { HiMenuAlt3, HiX } from 'react-icons/hi';
 import { useAuth } from '../context/AuthContext';
+import { useFavorites } from '../context/FavoritesContext';
+import { useNotification } from '../context/NotificationContext';
 
 export default function Pets() {
     const { user, logout } = useAuth();
+    const { toggleFavorite, isFavorite } = useFavorites();
+    const { success, info } = useNotification();
     const [pets, setPets] = useState([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
         fetch('http://localhost:5000/api/pets')
@@ -17,24 +23,61 @@ export default function Pets() {
             .catch((err) => { console.error(err); setLoading(false); });
     }, []);
 
+    useEffect(() => {
+        document.body.style.overflow = menuOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [menuOpen]);
+
     const filtered = pets.filter((p) =>
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.breed.toLowerCase().includes(search.toLowerCase()) ||
         p.personality.some((t) => t.toLowerCase().includes(search.toLowerCase()))
     );
 
+    const handleToggleFavorite = (petId, petName) => {
+        if (!user) {
+            info('Please sign in to save favorites');
+            return;
+        }
+        
+        const wasFavorite = isFavorite(petId);
+        toggleFavorite(petId);
+        
+        if (wasFavorite) {
+            info(`Removed ${petName} from favorites`);
+        } else {
+            success(`Added ${petName} to favorites! ❤️`);
+        }
+    };
+
+    const handleLogout = () => {
+        logout();
+        info('You have been logged out successfully');
+        setMenuOpen(false);
+    };
+
     return (
         <div className="min-h-dvh bg-warm-bg">
             {/* Top bar */}
             <header className="sticky top-0 z-40 bg-warm-bg/85 backdrop-blur-xl border-b border-warm-border">
                 <div className="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2 font-heading text-xl font-bold">
+                    <Link to="/" className="flex items-center gap-2 font-heading text-xl font-bold z-[60]">
                         <FaPaw className="text-primary-600" />
                         <span className="bg-gradient-to-br from-accent-700 to-primary-700 bg-clip-text text-transparent">
                             Aurelia
                         </span>
                     </Link>
 
+                    {/* Backdrop overlay */}
+                    {menuOpen && (
+                        <div
+                            className="fixed inset-0 bg-black/40 z-[55] md:hidden"
+                            onClick={() => setMenuOpen(false)}
+                            aria-hidden="true"
+                        />
+                    )}
+
+                    {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-8">
                         {user && (
                             <Link to="/dashboard" className="text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">
@@ -52,10 +95,136 @@ export default function Pets() {
                         </Link>
                     </nav>
 
+                    {/* Mobile Menu */}
+                    <nav
+                        className={`md:hidden fixed top-0 right-0 w-[280px] h-dvh
+                            flex flex-col justify-center items-center
+                            bg-[#FFFDF7] z-[60]
+                            shadow-[-8px_0_30px_rgba(0,0,0,0.15)]
+                            transition-transform duration-300 ease-out
+                            ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                        aria-label="Mobile navigation"
+                    >
+                        <div className="flex flex-col items-center gap-6 mb-8">
+                            {/* Navigation Links */}
+                            <Link 
+                                to="/" 
+                                onClick={() => setMenuOpen(false)}
+                                className="relative text-lg font-semibold text-warm-muted hover:text-warm-text 
+                                    transition-colors duration-200
+                                    after:content-[''] after:absolute after:bottom-[-2px] after:left-0
+                                    after:w-0 after:h-[2px] after:bg-gradient-to-r after:from-primary-500 after:to-primary-700
+                                    after:rounded-full after:transition-all after:duration-300
+                                    hover:after:w-full">
+                                Home
+                            </Link>
+                            {user && (
+                                <Link 
+                                    to="/dashboard" 
+                                    onClick={() => setMenuOpen(false)}
+                                    className="relative text-lg font-semibold text-warm-muted hover:text-warm-text 
+                                        transition-colors duration-200
+                                        after:content-[''] after:absolute after:bottom-[-2px] after:left-0
+                                        after:w-0 after:h-[2px] after:bg-gradient-to-r after:from-primary-500 after:to-primary-700
+                                        after:rounded-full after:transition-all after:duration-300
+                                        hover:after:w-full">
+                                    Dashboard
+                                </Link>
+                            )}
+                            <span className="relative text-lg font-semibold text-primary-700
+                                after:content-[''] after:absolute after:bottom-[-2px] after:left-0
+                                after:w-full after:h-[2px] after:bg-gradient-to-r after:from-primary-500 after:to-primary-700
+                                after:rounded-full">
+                                Adopt
+                            </span>
+                            <Link 
+                                to="/how-it-works" 
+                                onClick={() => setMenuOpen(false)}
+                                className="relative text-lg font-semibold text-warm-muted hover:text-warm-text 
+                                    transition-colors duration-200
+                                    after:content-[''] after:absolute after:bottom-[-2px] after:left-0
+                                    after:w-0 after:h-[2px] after:bg-gradient-to-r after:from-primary-500 after:to-primary-700
+                                    after:rounded-full after:transition-all after:duration-300
+                                    hover:after:w-full">
+                                How It Works
+                            </Link>
+                        </div>
+
+                        {/* Mobile Auth Section */}
+                        <div className="flex flex-col items-center gap-3 pt-6 border-t border-warm-border/40 w-[85%]">
+                            {user ? (
+                                <>
+                                    <div className="flex flex-col items-center gap-2 mb-3">
+                                        <span className="text-base font-semibold text-warm-text">
+                                            Hi, {user.name.split(' ')[0]} 👋
+                                        </span>
+                                        <span className="text-xs text-warm-faded capitalize px-3 py-1 bg-primary-50 rounded-full border border-primary-100">
+                                            {user.role}
+                                        </span>
+                                    </div>
+                                    <Link 
+                                        to="/favorites" 
+                                        onClick={() => setMenuOpen(false)}
+                                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl
+                                            bg-white/60 backdrop-blur-md border border-warm-border/50
+                                            text-sm font-medium text-warm-text
+                                            hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700
+                                            transition-all duration-200 shadow-warm-xs"
+                                    >
+                                        <FaHeart className="text-base" /> My Favorites
+                                    </Link>
+                                    <Link 
+                                        to="/profile" 
+                                        onClick={() => setMenuOpen(false)}
+                                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl
+                                            bg-white/60 backdrop-blur-md border border-warm-border/50
+                                            text-sm font-medium text-warm-text
+                                            hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700
+                                            transition-all duration-200 shadow-warm-xs"
+                                    >
+                                        <FaUserCircle className="text-base" /> My Profile
+                                    </Link>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center justify-center gap-2 mt-2 px-6 py-3 rounded-xl
+                                            bg-white/60 backdrop-blur-md border border-warm-border/50
+                                            text-sm font-medium text-warm-text
+                                            hover:border-red-200 hover:bg-red-50 hover:text-red-600
+                                            transition-all duration-200 shadow-warm-xs"
+                                    >
+                                        <FaSignOutAlt className="text-base" /> Logout
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Link 
+                                        to="/login" 
+                                        onClick={() => setMenuOpen(false)}
+                                        className="w-full text-center px-8 py-3 rounded-xl
+                                            bg-white/60 backdrop-blur-md border border-warm-border/50
+                                            text-sm font-medium text-warm-text
+                                            hover:border-primary-200 hover:bg-primary-50
+                                            transition-all duration-200 shadow-warm-xs"
+                                    >
+                                        Sign In
+                                    </Link>
+                                    <Link 
+                                        to="/register" 
+                                        onClick={() => setMenuOpen(false)}
+                                        className="w-full text-center btn-primary px-8 py-3 text-sm"
+                                    >
+                                        Get Started
+                                    </Link>
+                                </>
+                            )}
+                        </div>
+                    </nav>
+
+                    {/* Desktop Auth + Mobile Toggle */}
                     <div className="flex items-center gap-3">
                         {user ? (
                             <>
-                                <Link to="/dashboard"
+                                <Link to="/profile"
                                     className="hidden sm:flex items-center gap-2 bg-white/60 backdrop-blur-md
                                         rounded-full pl-1 pr-4 py-1 border border-warm-border/50
                                         hover:border-primary-200 transition-all duration-200">
@@ -66,8 +235,8 @@ export default function Pets() {
                                     <span className="text-sm font-semibold text-warm-text">{user.name.split(' ')[0]}</span>
                                 </Link>
                                 <button
-                                    onClick={logout}
-                                    className="p-2.5 rounded-xl text-warm-faded hover:text-red-500
+                                    onClick={handleLogout}
+                                    className="hidden md:flex p-2.5 rounded-xl text-warm-faded hover:text-red-500
                                         hover:bg-red-50 transition-all duration-200 border border-transparent hover:border-red-100"
                                     aria-label="Logout"
                                 >
@@ -76,14 +245,25 @@ export default function Pets() {
                             </>
                         ) : (
                             <>
-                                <Link to="/login" className="text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">
+                                <Link to="/login" className="hidden md:inline text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">
                                     Sign In
                                 </Link>
-                                <Link to="/register" className="btn-primary text-sm px-6 py-2.5">
+                                <Link to="/register" className="hidden md:inline btn-primary text-sm px-6 py-2.5">
                                     Get Started
                                 </Link>
                             </>
                         )}
+
+                        {/* Mobile Toggle Button */}
+                        <button
+                            className="flex md:hidden items-center justify-center text-warm-text z-[60] 
+                                p-2 rounded-lg hover:bg-warm-border/30 transition-colors"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                            aria-expanded={menuOpen}
+                        >
+                            {menuOpen ? <HiX size={26} /> : <HiMenuAlt3 size={26} />}
+                        </button>
                     </div>
                 </div>
             </header>
@@ -228,14 +408,17 @@ export default function Pets() {
 
                                         {/* Heart */}
                                         <button
-                                            className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center
-                        rounded-full bg-primary-50 text-warm-faded text-sm
-                        border border-warm-border
-                        hover:text-red-400 hover:bg-red-50 hover:border-red-400
-                        hover:scale-110 transition-all duration-200"
-                                            aria-label={`Save ${pet.name} to favorites`}
+                                            onClick={() => handleToggleFavorite(pet.id, pet.name)}
+                                            className={`absolute top-5 right-5 w-9 h-9 flex items-center justify-center
+                        rounded-full text-sm border transition-all duration-200
+                        ${isFavorite(pet.id)
+                                                ? 'bg-red-50 text-red-500 border-red-400 hover:bg-red-100'
+                                                : 'bg-primary-50 text-warm-faded border-warm-border hover:text-red-400 hover:bg-red-50 hover:border-red-400'
+                                            }
+                        hover:scale-110`}
+                                            aria-label={isFavorite(pet.id) ? `Remove ${pet.name} from favorites` : `Save ${pet.name} to favorites`}
                                         >
-                                            <FaHeart />
+                                            <FaHeart className={isFavorite(pet.id) ? 'animate-pulse' : ''} />
                                         </button>
                                     </div>
                                 </motion.article>

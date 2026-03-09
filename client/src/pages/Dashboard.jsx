@@ -7,6 +7,8 @@ import {
     FaSignOutAlt, FaDog, FaCat, FaArrowRight
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
+import { useFavorites } from '../context/FavoritesContext';
 
 /* ── Animation variants ───────────────────────────────────── */
 const fadeUp = {
@@ -20,6 +22,8 @@ const fadeUp = {
 /* ── Dashboard ────────────────────────────────────────────── */
 export default function Dashboard() {
     const { user, loading, logout } = useAuth();
+    const { info } = useNotification();
+    const { count: favoritesCount } = useFavorites();
     const [toast, setToast] = useState(null);
     const [petCount, setPetCount] = useState(0);
     const [greeting, setGreeting] = useState('');
@@ -41,6 +45,11 @@ export default function Dashboard() {
 
     const firstName = user.name.split(' ')[0];
     const isShelter = user.role === 'shelter';
+
+    const handleLogout = () => {
+        logout();
+        info('You have been logged out successfully');
+    };
 
     const showToast = (label) => {
         setToast(label);
@@ -69,6 +78,7 @@ export default function Dashboard() {
                     </Link>
 
                     <div className="flex items-center gap-3">
+                        {/* Desktop User Profile */}
                         <div className="hidden sm:flex items-center gap-2 bg-white/60 backdrop-blur-md rounded-full pl-1 pr-4 py-1 border border-warm-border/50">
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600
                                 flex items-center justify-center text-white text-xs font-bold shadow-warm-sm">
@@ -76,13 +86,35 @@ export default function Dashboard() {
                             </div>
                             <span className="text-sm font-semibold text-warm-text">{firstName}</span>
                         </div>
+                        
+                        {/* Mobile User Profile - Avatar only */}
+                        <div className="flex sm:hidden items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600
+                                flex items-center justify-center text-white text-xs font-bold shadow-warm-sm">
+                                {user.name.charAt(0).toUpperCase()}
+                            </div>
+                        </div>
+                        
+                        {/* Desktop Logout - Icon only */}
                         <button
-                            onClick={logout}
-                            className="p-2.5 rounded-xl text-warm-faded hover:text-red-500
+                            onClick={handleLogout}
+                            className="hidden sm:flex p-2.5 rounded-xl text-warm-faded hover:text-red-500
                                 hover:bg-red-50 transition-all duration-200 border border-transparent hover:border-red-100"
                             aria-label="Logout"
                         >
                             <FaSignOutAlt className="text-[0.9rem]" />
+                        </button>
+                        
+                        {/* Mobile Logout - Icon + Text */}
+                        <button
+                            onClick={handleLogout}
+                            className="flex sm:hidden items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                text-warm-faded hover:text-red-500 hover:bg-red-50 transition-all duration-200 
+                                border border-warm-border hover:border-red-100"
+                            aria-label="Logout"
+                        >
+                            <FaSignOutAlt className="text-xs" />
+                            <span>Logout</span>
                         </button>
                     </div>
                 </div>
@@ -175,7 +207,7 @@ export default function Dashboard() {
                                 flex items-center justify-center text-white text-sm mb-3 shadow-warm-sm">
                                 <FaHeart />
                             </div>
-                            <p className="font-heading text-2xl font-bold text-warm-text">0</p>
+                            <p className="font-heading text-2xl font-bold text-warm-text">{favoritesCount}</p>
                             <p className="text-xs text-warm-faded mt-0.5">Saved Favorites</p>
                         </div>
                         {/* Profile card */}
@@ -313,9 +345,9 @@ export default function Dashboard() {
 
 /* ── Action card definitions ──────────────────────────────── */
 const adopterActions = [
-    { icon: FaHeart, label: 'My Favorites', desc: 'Pets you\'ve loved & saved for later.', to: null, color: 'from-rose-400 to-red-500', span: 'lg:col-span-4' },
+    { icon: FaHeart, label: 'My Favorites', desc: 'Pets you\'ve loved & saved for later.', to: '/favorites', color: 'from-rose-400 to-red-500', span: 'lg:col-span-4' },
     { icon: FaClipboardList, label: 'Adoption Status', desc: 'Track your adoption applications in real time.', to: null, color: 'from-amber-400 to-orange-500', span: 'lg:col-span-4' },
-    { icon: FaUserCircle, label: 'My Profile', desc: 'Update your info and preferences.', to: null, color: 'from-accent-400 to-accent-600', span: 'lg:col-span-4' },
+    { icon: FaUserCircle, label: 'My Profile', desc: 'Update your info and preferences.', to: '/profile', color: 'from-accent-400 to-accent-600', span: 'lg:col-span-4' },
     { icon: FaBookOpen, label: 'How It Works', desc: 'Learn the adoption process step by step.', to: '/how-it-works', color: 'from-emerald-400 to-emerald-600', span: 'lg:col-span-6' },
     { icon: FaComments, label: 'Contact Support', desc: 'Have questions? We\'re here to help 24/7.', to: null, color: 'from-sky-400 to-blue-500', span: 'lg:col-span-6' },
 ];
@@ -324,6 +356,6 @@ const shelterActions = [
     { icon: FaPlusCircle, label: 'Add New Pet', desc: 'List a new pet for adoption.', to: null, color: 'from-emerald-400 to-emerald-600', span: 'lg:col-span-4' },
     { icon: FaThList, label: 'Manage Listings', desc: 'Edit or remove your shelter\'s pets.', to: null, color: 'from-amber-400 to-orange-500', span: 'lg:col-span-4' },
     { icon: FaEnvelopeOpenText, label: 'Applications', desc: 'Review and respond to adoption requests.', to: null, color: 'from-violet-400 to-purple-500', span: 'lg:col-span-4' },
-    { icon: FaHome, label: 'Shelter Profile', desc: 'Update your shelter details and bio.', to: null, color: 'from-accent-400 to-accent-600', span: 'lg:col-span-6' },
+    { icon: FaHome, label: 'Shelter Profile', desc: 'Update your shelter details and bio.', to: '/profile', color: 'from-accent-400 to-accent-600', span: 'lg:col-span-6' },
     { icon: FaComments, label: 'Contact Support', desc: 'Need assistance? We\'re always here.', to: null, color: 'from-sky-400 to-blue-500', span: 'lg:col-span-6' },
 ];

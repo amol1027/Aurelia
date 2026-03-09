@@ -1,7 +1,13 @@
 import { motion } from 'framer-motion';
 import { FaPaw, FaClock, FaHeart } from 'react-icons/fa';
+import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 export default function FeaturedPets({ pets }) {
+    const { toggleFavorite, isFavorite } = useFavorites();
+    const { user } = useAuth();
+    const { success, info } = useNotification();
     if (!pets || pets.length === 0) {
         return (
             <section id="pets" className="py-24 bg-warm-bg">
@@ -13,6 +19,22 @@ export default function FeaturedPets({ pets }) {
             </section>
         );
     }
+
+    const handleToggleFavorite = (petId, petName) => {
+        if (!user) {
+            info('Please sign in to save favorites');
+            return;
+        }
+        
+        const wasFavorite = isFavorite(petId);
+        toggleFavorite(petId);
+        
+        if (wasFavorite) {
+            info(`Removed ${petName} from favorites`);
+        } else {
+            success(`Added ${petName} to favorites! ❤️`);
+        }
+    };
 
     return (
         <section id="pets" className="py-24 bg-warm-bg">
@@ -96,14 +118,18 @@ export default function FeaturedPets({ pets }) {
 
                                 {/* Heart */}
                                 <button
-                                    className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center
-                    rounded-full bg-primary-50 text-warm-faded text-sm
-                    border border-warm-border
-                    hover:text-red-400 hover:bg-red-50 hover:border-red-400
-                    hover:scale-110 transition-all duration-200"
-                                    aria-label={`Save ${pet.name} to favorites`}
+                                    onClick={() => handleToggleFavorite(pet.id, pet.name)}
+                                    className={`absolute top-5 right-5 w-9 h-9 flex items-center justify-center
+                    rounded-full text-sm border
+                    transition-all duration-200
+                    ${isFavorite(pet.id)
+                                            ? 'bg-red-50 text-red-500 border-red-400 hover:bg-red-100'
+                                            : 'bg-primary-50 text-warm-faded border-warm-border hover:text-red-400 hover:bg-red-50 hover:border-red-400'
+                                        }
+                    hover:scale-110`}
+                                    aria-label={isFavorite(pet.id) ? `Remove ${pet.name} from favorites` : `Save ${pet.name} to favorites`}
                                 >
-                                    <FaHeart />
+                                    <FaHeart className={isFavorite(pet.id) ? 'animate-pulse' : ''} />
                                 </button>
                             </div>
                         </motion.article>

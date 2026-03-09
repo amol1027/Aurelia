@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaPaw, FaEnvelope, FaLock, FaUser, FaPhone, FaHome, FaBuilding, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 export default function Register() {
     const { login } = useAuth();
+    const { success, error: showError } = useNotification();
     const navigate = useNavigate();
 
     const [role, setRole] = useState('adopter');
@@ -29,12 +31,16 @@ export default function Register() {
         setError('');
 
         if (form.password !== form.confirmPassword) {
-            setError('Passwords do not match');
+            const errorMsg = 'Passwords do not match';
+            setError(errorMsg);
+            showError(errorMsg);
             return;
         }
 
         if (form.password.length < 6) {
-            setError('Password must be at least 6 characters');
+            const errorMsg = 'Password must be at least 6 characters';
+            setError(errorMsg);
+            showError(errorMsg);
             return;
         }
 
@@ -59,14 +65,18 @@ export default function Register() {
 
             if (!res.ok) {
                 setError(data.error || 'Registration failed');
+                showError(data.error || 'Registration failed');
                 setLoading(false);
                 return;
             }
 
             login(data.user, data.token);
+            success(`Welcome to Aurelia, ${data.user.name.split(' ')[0]}! 🐾`);
             navigate('/pets');
         } catch {
-            setError('Network error. Please try again.');
+            const errorMsg = 'Network error. Please try again.';
+            setError(errorMsg);
+            showError(errorMsg);
             setLoading(false);
         }
     };

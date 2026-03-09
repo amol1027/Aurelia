@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { FavoritesProvider } from './context/FavoritesContext';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Favorites from './pages/Favorites';
 import Pets from './pages/Pets';
 import HowItWorksPage from './pages/HowItWorksPage';
 
@@ -19,20 +23,26 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <div className="min-h-screen bg-warm-bg">
-          <Routes>
-            <Route path="/" element={<Home pets={pets} />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/how-it-works" element={<HowItWorksPage />} />
-            <Route path="/pets" element={<Pets />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
+    <NotificationProvider>
+      <AuthProvider>
+        <FavoritesProvider>
+          <BrowserRouter>
+            <div className="min-h-screen bg-warm-bg">
+              <Routes>
+                <Route path="/" element={<Home pets={pets} />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/how-it-works" element={<HowItWorksPage />} />
+                <Route path="/pets" element={<Pets />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </FavoritesProvider>
+      </AuthProvider>
+    </NotificationProvider>
   );
 }
 
