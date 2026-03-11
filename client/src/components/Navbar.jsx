@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
-import { FaPaw, FaSignOutAlt } from 'react-icons/fa';
+import { FaPaw, FaSignOutAlt, FaUserShield, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 
@@ -97,10 +97,17 @@ export default function Navbar() {
                                 <span className="text-xs text-warm-faded capitalize px-3 py-0.5 bg-primary-50 rounded-full border border-primary-100">
                                     {user.role}
                                 </span>
-                                <Link to="/profile" onClick={() => setMenuOpen(false)}
-                                    className="btn-secondary text-sm px-6 py-2">
-                                    <FaUserCircle /> My Profile
-                                </Link>
+                                {user.role === 'admin' ? (
+                                    <Link to="/admin" onClick={() => setMenuOpen(false)}
+                                        className="btn-primary text-sm px-6 py-2">
+                                        <FaUserShield /> Admin Panel
+                                    </Link>
+                                ) : (
+                                    <Link to="/profile" onClick={() => setMenuOpen(false)}
+                                        className="btn-secondary text-sm px-6 py-2">
+                                        <FaUserCircle /> My Profile
+                                    </Link>
+                                )}
                                 <button
                                     onClick={handleLogout}
                                     className="btn-secondary text-sm px-6 py-2"
@@ -127,6 +134,15 @@ export default function Navbar() {
                 <div className="hidden md:flex items-center gap-3">
                     {user ? (
                         <>
+                            {user.role === 'admin' && (
+                                <Link to="/admin" 
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-50 
+                                        hover:bg-accent-100 border border-accent-200 hover:border-accent-300
+                                        text-accent-700 hover:text-accent-800 transition-all duration-200">
+                                    <FaUserShield />
+                                    <span className="text-sm font-semibold">Admin Panel</span>
+                                </Link>
+                            )}
                             <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600
                                     flex items-center justify-center text-white text-xs font-bold">

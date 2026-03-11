@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaPaw, FaEnvelope, FaLock, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import Navbar from '../components/Navbar';
 
 export default function Login() {
     const { login } = useAuth();
@@ -36,7 +37,13 @@ export default function Login() {
 
             login(data.user, data.token);
             success(`Welcome back, ${data.user.name.split(' ')[0]}! 🎉`);
-            navigate('/dashboard');
+            
+            // Redirect based on role
+            if (data.user.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/pets');
+            }
         } catch {
             const errorMsg = 'Network error. Please try again.';
             setError(errorMsg);
@@ -46,7 +53,9 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-warm-bg via-primary-50 to-[#FFF5E0] px-4">
+        <>
+            <Navbar />
+            <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-warm-bg via-primary-50 to-[#FFF5E0] px-4 pt-[72px]">
             {/* Decorative orbs */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute -top-[20%] -right-[10%] w-[400px] h-[400px] rounded-full
@@ -159,5 +168,6 @@ export default function Login() {
                 </div>
             </div>
         </div>
+        </>
     );
 }

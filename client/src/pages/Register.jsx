@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FaPaw, FaEnvelope, FaLock, FaUser, FaPhone, FaHome, FaBuilding, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import Navbar from '../components/Navbar';
 
 export default function Register() {
     const { login } = useAuth();
@@ -82,7 +83,9 @@ export default function Register() {
     };
 
     return (
-        <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-warm-bg via-primary-50 to-[#FFF5E0] px-4 py-12">
+        <>
+            <Navbar />
+            <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-warm-bg via-primary-50 to-[#FFF5E0] px-4 py-12 pt-[72px]">
             {/* Decorative orbs */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute -top-[20%] -left-[10%] w-[400px] h-[400px] rounded-full
@@ -343,5 +346,6 @@ export default function Register() {
                 </div>
             </div>
         </div>
+        </>
     );
 }

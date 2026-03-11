@@ -81,6 +81,28 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
+        // Check for hardcoded admin credentials
+        if (email === 'admin@gmail.com' && password === '123456') {
+            const token = jwt.sign(
+                { id: 0, role: 'admin', email: 'admin' },
+                JWT_SECRET,
+                { expiresIn: JWT_EXPIRES_IN }
+            );
+
+            return res.json({
+                message: 'Admin login successful',
+                token,
+                user: {
+                    id: 0,
+                    role: 'admin',
+                    name: 'Administrator',
+                    email: 'admin',
+                    phone: null,
+                    shelterName: null,
+                },
+            });
+        }
+
         // Find user
         const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
         if (users.length === 0) {
@@ -130,6 +152,20 @@ router.get('/me', async (req, res) => {
 
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
+
+        // Handle admin user
+        if (decoded.role === 'admin' && decoded.id === 0) {
+            return res.json({
+                id: 0,
+                role: 'admin',
+                name: 'Administrator',
+                email: 'admin',
+                phone: null,
+                shelterName: null,
+                address: null,
+                createdAt: new Date().toISOString(),
+            });
+        }
 
         const [users] = await pool.query(
             'SELECT id, role, name, email, phone, shelter_name, address, created_at FROM users WHERE id = ?',
