@@ -37,8 +37,7 @@ export default function Navbar() {
 
     return (
         <nav
-            className={`fixed top-0 left-0 w-full h-[72px] z-50 transition-all duration-300 ease-out
-                ${scrolled ? 'bg-warm-bg/85 backdrop-blur-xl shadow-warm-sm border-b border-warm-border' : ''}`}
+            className="sticky top-0 left-0 w-full h-[72px] z-50 bg-warm-bg/90 backdrop-blur-xl shadow-warm-sm border-b border-warm-border"
             aria-label="Main navigation"
         >
             <div className="max-w-[1280px] mx-auto px-6 flex items-center justify-between h-full">
@@ -98,15 +97,27 @@ export default function Navbar() {
                                     {user.role}
                                 </span>
                                 {user.role === 'admin' ? (
-                                    <Link to="/admin" onClick={() => setMenuOpen(false)}
-                                        className="btn-primary text-sm px-6 py-2">
-                                        <FaUserShield /> Admin Panel
-                                    </Link>
+                                    <>
+                                        <Link to="/admin" onClick={() => setMenuOpen(false)}
+                                            className="btn-primary text-sm px-6 py-2">
+                                            <FaUserShield /> Admin Panel
+                                        </Link>
+                                        <Link to="/dashboard" onClick={() => setMenuOpen(false)}
+                                            className="btn-secondary text-sm px-6 py-2">
+                                            <FaUserCircle /> User View
+                                        </Link>
+                                    </>
                                 ) : (
-                                    <Link to="/profile" onClick={() => setMenuOpen(false)}
-                                        className="btn-secondary text-sm px-6 py-2">
-                                        <FaUserCircle /> My Profile
-                                    </Link>
+                                    <>
+                                        <Link to="/dashboard" onClick={() => setMenuOpen(false)}
+                                            className="btn-primary text-sm px-6 py-2">
+                                            <FaUserCircle /> Dashboard
+                                        </Link>
+                                        <Link to="/profile" onClick={() => setMenuOpen(false)}
+                                            className="btn-secondary text-sm px-6 py-2">
+                                            <FaUserCircle /> My Profile
+                                        </Link>
+                                    </>
                                 )}
                                 <button
                                     onClick={handleLogout}
@@ -134,13 +145,21 @@ export default function Navbar() {
                 <div className="hidden md:flex items-center gap-3">
                     {user ? (
                         <>
-                            {user.role === 'admin' && (
-                                <Link to="/admin" 
-                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-50 
+                            {user.role === 'admin' ? (
+                                <Link to="/admin"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent-50
                                         hover:bg-accent-100 border border-accent-200 hover:border-accent-300
                                         text-accent-700 hover:text-accent-800 transition-all duration-200">
                                     <FaUserShield />
                                     <span className="text-sm font-semibold">Admin Panel</span>
+                                </Link>
+                            ) : (
+                                <Link to="/dashboard"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50
+                                        hover:bg-primary-100 border border-primary-100 hover:border-primary-200
+                                        text-primary-700 hover:text-primary-800 transition-all duration-200">
+                                    <FaUserCircle />
+                                    <span className="text-sm font-semibold">Dashboard</span>
                                 </Link>
                             )}
                             <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">

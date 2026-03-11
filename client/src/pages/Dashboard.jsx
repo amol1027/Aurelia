@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FaPaw, FaHeart, FaClipboardList, FaUserCircle, FaBookOpen,
     FaComments, FaPlusCircle, FaThList, FaEnvelopeOpenText, FaHome,
-    FaSignOutAlt, FaDog, FaCat, FaArrowRight
+    FaSignOutAlt, FaDog, FaCat, FaArrowRight, FaUserShield
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -78,6 +78,19 @@ export default function Dashboard() {
                     </Link>
 
                     <div className="flex items-center gap-3">
+                        {/* Admin Panel shortcut — only for admin role */}
+                        {user.role === 'admin' && (
+                            <Link
+                                to="/admin"
+                                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg
+                                    bg-accent-50 hover:bg-accent-100 border border-accent-200 hover:border-accent-300
+                                    text-accent-700 hover:text-accent-800 transition-all duration-200 text-sm font-semibold"
+                            >
+                                <FaUserShield size={13} />
+                                <span>Admin Panel</span>
+                            </Link>
+                        )}
+
                         {/* Desktop User Profile */}
                         <div className="hidden sm:flex items-center gap-2 bg-white/60 backdrop-blur-md rounded-full pl-1 pr-4 py-1 border border-warm-border/50">
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600

@@ -51,6 +51,25 @@ app.get('/api/pets/:id', async (req, res) => {
     }
 });
 
+// GET admin stats
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        const [[totalUsersRow]] = await pool.query('SELECT COUNT(*) as count FROM users');
+        const [[adoptersRow]] = await pool.query('SELECT COUNT(*) as count FROM users WHERE role = "adopter"');
+        const [[sheltersRow]] = await pool.query('SELECT COUNT(*) as count FROM users WHERE role = "shelter"');
+        const [[totalPetsRow]] = await pool.query('SELECT COUNT(*) as count FROM pets');
+        res.json({
+            totalUsers: totalUsersRow.count,
+            adopters: adoptersRow.count,
+            shelters: sheltersRow.count,
+            totalPets: totalPetsRow.count,
+        });
+    } catch (err) {
+        console.error('Admin stats error:', err.message);
+        res.status(500).json({ error: 'Failed to fetch stats' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🐾 Aurelia API running on http://localhost:${PORT}`);
 });

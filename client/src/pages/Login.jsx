@@ -55,7 +55,7 @@ export default function Login() {
     return (
         <>
             <Navbar />
-            <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-warm-bg via-primary-50 to-[#FFF5E0] px-4 pt-[72px]">
+            <div className="min-h-dvh flex items-center justify-center bg-gradient-to-br from-warm-bg via-primary-50 to-[#FFF5E0] px-4">
             {/* Decorative orbs */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute -top-[20%] -right-[10%] w-[400px] h-[400px] rounded-full

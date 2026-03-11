@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, NavLink, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    FaPaw, FaUsers, FaDog, FaBuilding, FaChartLine, FaUserShield,
-    FaHome, FaSignOutAlt, FaHeart, FaClipboardList, FaCog,
-    FaEnvelope, FaExclamationTriangle
+    FaUsers, FaDog, FaBuilding, FaUserShield,
+    FaSignOutAlt, FaHeart
 } from 'react-icons/fa';
+import { HiMenuAlt3, HiX } from 'react-icons/hi';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 
@@ -30,6 +30,12 @@ export default function AdminDashboard() {
     });
     const [greeting, setGreeting] = useState('');
     const [toast, setToast] = useState(null);
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    useEffect(() => {
+        document.body.style.overflow = menuOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [menuOpen]);
 
     useEffect(() => {
         const h = new Date().getHours();
@@ -37,18 +43,10 @@ export default function AdminDashboard() {
     }, []);
 
     useEffect(() => {
-        // Fetch stats
-        Promise.all([
-            fetch('http://localhost:5000/api/pets').then(r => r.json()),
-            // You can add more API calls here for user stats when available
-        ])
-            .then(([pets]) => {
-                setStats(prev => ({
-                    ...prev,
-                    totalPets: pets.length,
-                }));
-            })
-            .catch(() => { });
+        fetch('http://localhost:5000/api/admin/stats')
+            .then(r => r.json())
+            .then(data => setStats(data))
+            .catch(() => {});
     }, []);
 
     if (loading) return null;
@@ -58,6 +56,7 @@ export default function AdminDashboard() {
     const handleLogout = () => {
         logout();
         info('Admin logged out successfully');
+        setMenuOpen(false);
     };
 
     const showToast = (label) => {
@@ -70,8 +69,8 @@ export default function AdminDashboard() {
             icon: FaUsers,
             label: 'Total Users',
             value: stats.totalUsers,
-            color: 'from-blue-400 to-blue-600',
-            bgColor: 'bg-blue-50',
+            color: 'from-primary-300 to-primary-500',
+            bgColor: 'bg-primary-50',
         },
         {
             icon: FaDog,
@@ -84,38 +83,62 @@ export default function AdminDashboard() {
             icon: FaUsers,
             label: 'Adopters',
             value: stats.adopters,
-            color: 'from-green-400 to-green-600',
-            bgColor: 'bg-green-50',
+            color: 'from-accent-400 to-accent-600',
+            bgColor: 'bg-accent-50',
         },
         {
             icon: FaBuilding,
             label: 'Shelters',
             value: stats.shelters,
-            color: 'from-purple-400 to-purple-600',
-            bgColor: 'bg-purple-50',
+            color: 'from-accent-600 to-accent-800',
+            bgColor: 'bg-accent-50',
         },
     ];
 
     const quickActions = [
         { icon: FaUsers, label: 'Manage Users', description: 'View and manage all users', to: '#' },
-        { icon: FaDog, label: 'Manage Pets', description: 'View all pets listings', to: '/pets' },
+        { icon: FaDog, label: 'Manage Pets', description: 'View all pet listings', to: '/pets' },
         { icon: FaBuilding, label: 'Manage Shelters', description: 'View shelter details', to: '#' },
-        { icon: FaChartLine, label: 'Analytics', description: 'View platform statistics', to: '#' },
         { icon: FaHeart, label: 'Adoptions', description: 'View adoption records', to: '#' },
-        { icon: FaEnvelope, label: 'Messages', description: 'View user messages', to: '#' },
     ];
 
     return (
         <div className="min-h-dvh bg-warm-bg">
             {/* ─── Sticky nav ─── */}
             <header className="sticky top-0 z-50 bg-warm-bg/80 backdrop-blur-2xl border-b border-warm-border/60">
-                <div className="max-w-[1320px] mx-auto px-6 h-[64px] flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2 font-heading text-xl font-bold">
-                        <FaUserShield className="text-accent-600 transition-transform duration-300 hover:rotate-[-12deg] hover:scale-110" />
-                        <span className="bg-gradient-to-br from-accent-700 to-primary-700 bg-clip-text text-transparent">
-                            Admin Panel
-                        </span>
-                    </Link>
+                <nav className="max-w-[1320px] mx-auto px-6 h-[64px] flex items-center justify-between" aria-label="Admin navigation">
+                    {/* Logo + desktop nav links */}
+                    <div className="flex items-center gap-5">
+                        <Link to="/admin" className="flex items-center gap-2 font-heading text-xl font-bold shrink-0">
+                            <FaUserShield className="text-accent-600 transition-transform duration-300 hover:rotate-[-12deg] hover:scale-110" />
+                            <span className="bg-gradient-to-br from-accent-700 to-primary-700 bg-clip-text text-transparent">
+                                Admin Panel
+                            </span>
+                        </Link>
+
+                        {/* Desktop nav links */}
+                        <div className="hidden md:flex items-center gap-1">
+                            {[
+                                { label: 'Overview', to: '/admin', end: true },
+                                { label: 'Pets', to: '/pets' },
+                                { label: 'Main Site', to: '/', end: true },
+                            ].map(({ label, to, end }) => (
+                                <NavLink
+                                    key={to + label}
+                                    to={to}
+                                    end={end}
+                                    className={({ isActive }) =>
+                                        `px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ` +
+                                        (isActive
+                                            ? 'bg-primary-50 text-primary-700 border border-primary-100'
+                                            : 'text-warm-muted hover:text-warm-text hover:bg-warm-border/30')
+                                    }
+                                >
+                                    {label}
+                                </NavLink>
+                            ))}
+                        </div>
+                    </div>
 
                     <div className="flex items-center gap-3">
                         {/* Desktop Admin Profile */}
@@ -138,18 +161,95 @@ export default function AdminDashboard() {
                         {/* Logout Button */}
                         <button
                             onClick={handleLogout}
-                            className="p-2 rounded-lg text-warm-faded hover:text-red-600 hover:bg-red-50 
+                            className="hidden sm:flex p-2 rounded-lg text-warm-faded hover:text-red-600 hover:bg-red-50 
                                 transition-all duration-200"
                             aria-label="Logout"
                         >
                             <FaSignOutAlt size={18} />
+                        </button>
+
+                        {/* Mobile hamburger */}
+                        <button
+                            className="flex md:hidden items-center justify-center text-warm-text z-[60]"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                            aria-expanded={menuOpen}
+                        >
+                            {menuOpen ? <HiX size={24} /> : <HiMenuAlt3 size={24} />}
+                        </button>
+                    </div>
+                </nav>
+
+                {/* ─── Mobile slide-out drawer ─── */}
+                {menuOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/40 z-[55] md:hidden"
+                        onClick={() => setMenuOpen(false)}
+                        aria-hidden="true"
+                    />
+                )}
+                <div
+                    className={`fixed top-0 right-0 w-[280px] h-dvh bg-[#FFFDF7] z-[60] flex flex-col
+                        shadow-[-8px_0_30px_rgba(0,0,0,0.15)] transition-transform duration-300 ease-out md:hidden
+                        ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                >
+                    {/* Drawer header */}
+                    <div className="flex items-center justify-between px-6 h-[64px] border-b border-warm-border/60">
+                        <span className="font-heading font-bold text-lg bg-gradient-to-br from-accent-700 to-primary-700 bg-clip-text text-transparent">
+                            Admin Panel
+                        </span>
+                        <button onClick={() => setMenuOpen(false)} aria-label="Close menu" className="p-1 text-warm-faded hover:text-warm-text">
+                            <HiX size={22} />
+                        </button>
+                    </div>
+
+                    {/* Drawer links */}
+                    <nav className="flex flex-col gap-1 px-4 pt-6 flex-1" aria-label="Admin mobile navigation">
+                        {[
+                            { label: 'Overview', to: '/admin', end: true },
+                            { label: 'Pets', to: '/pets' },
+                            { label: 'Main Site', to: '/', end: true },
+                        ].map(({ label, to, end }) => (
+                            <NavLink
+                                key={to + label}
+                                to={to}
+                                end={end}
+                                onClick={() => setMenuOpen(false)}
+                                className={({ isActive }) =>
+                                    `px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 ` +
+                                    (isActive
+                                        ? 'bg-primary-50 text-primary-700 border border-primary-100'
+                                        : 'text-warm-muted hover:text-warm-text hover:bg-warm-border/30')
+                                }
+                            >
+                                {label}
+                            </NavLink>
+                        ))}
+                    </nav>
+
+                    {/* Drawer footer */}
+                    <div className="px-4 pb-8 border-t border-warm-border/60 pt-4">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent-500 to-accent-700
+                                flex items-center justify-center text-white text-xs font-bold shadow-warm-sm">
+                                <FaUserShield />
+                            </div>
+                            <span className="text-sm font-semibold text-warm-text">Administrator</span>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
+                                text-sm font-medium text-red-600 hover:bg-red-50 border border-red-100
+                                transition-all duration-200"
+                        >
+                            <FaSignOutAlt /> Logout
                         </button>
                     </div>
                 </div>
             </header>
 
             {/* ─── Content ─── */}
-            <main className="max-w-[1320px] mx-auto px-6 py-8 md:py-12">
+            <main className="max-w-[1320px] mx-auto px-6 py-16 md:py-24">
                 {/* Greeting */}
                 <motion.div
                     initial="hidden"
@@ -157,6 +257,7 @@ export default function AdminDashboard() {
                     variants={fadeUp}
                     className="mb-8"
                 >
+                    <span className="section-label">Admin Dashboard</span>
                     <h1 className="font-heading text-3xl md:text-4xl font-bold text-warm-text mb-2">
                         {greeting}, Administrator 👋
                     </h1>
@@ -204,6 +305,7 @@ export default function AdminDashboard() {
                     custom={5}
                     className="mb-8"
                 >
+                    <span className="section-label">Quick Actions</span>
                     <h2 className="font-heading text-xl md:text-2xl font-bold text-warm-text mb-4">
                         Quick Actions
                     </h2>
@@ -249,24 +351,7 @@ export default function AdminDashboard() {
                     </div>
                 </motion.div>
 
-                {/* Back to Site */}
-                <motion.div
-                    initial="hidden"
-                    animate="show"
-                    variants={fadeUp}
-                    custom={12}
-                    className="flex justify-center"
-                >
-                    <Link
-                        to="/"
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
-                            bg-white border border-warm-border text-warm-text
-                            hover:border-primary-400 hover:text-primary-700 hover:shadow-warm-md
-                            transition-all duration-300 font-medium"
-                    >
-                        <FaHome /> Back to Main Site
-                    </Link>
-                </motion.div>
+
             </main>
 
             {/* Toast Notification */}

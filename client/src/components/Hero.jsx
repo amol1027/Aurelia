@@ -5,7 +5,7 @@ export default function Hero() {
     return (
         <section
             id="hero"
-            className="relative min-h-dvh flex items-center overflow-hidden pt-[72px]
+            className="relative min-h-dvh flex items-center overflow-hidden
         bg-gradient-to-br from-warm-bg via-primary-50 to-[#FFF5E0]"
             aria-label="Welcome to Aurelia"
         >
