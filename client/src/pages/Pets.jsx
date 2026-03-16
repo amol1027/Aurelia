@@ -355,6 +355,7 @@ export default function Pets() {
                                 >
                                     {/* Image */}
                                     <div className="relative h-[280px] overflow-hidden">
+                                        <Link to={`/pets/${pet.id}`} className="block h-full" tabIndex={-1} aria-hidden="true">
                                         <img
                                             src={pet.image}
                                             alt={`${pet.name}, a ${pet.breed} available for adoption`}
@@ -362,18 +363,20 @@ export default function Pets() {
                         group-hover:scale-[1.06]"
                                             loading="lazy"
                                         />
+                                        </Link>
 
                                         {/* Hover overlay */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent
                       flex items-end justify-center pb-8
-                      opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                            <button
-                                                className="btn-primary text-sm px-6 py-2.5
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                            <Link
+                                                to={`/pets/${pet.id}`}
+                                                className="btn-primary text-sm px-6 py-2.5 pointer-events-auto
                           translate-y-2 group-hover:translate-y-0 transition-transform duration-300"
                                                 aria-label={`Adopt ${pet.name}`}
                                             >
                                                 <FaPaw /> Adopt {pet.name}
-                                            </button>
+                                            </Link>
                                         </div>
 
                                         {/* Age badge */}

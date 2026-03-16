@@ -3,6 +3,7 @@ const cors = require('cors');
 const pool = require('./db');
 const authRoutes = require('./routes/auth');
 const favoritesRoutes = require('./routes/favorites');
+const usersRoutes = require('./routes/users');
 require('dotenv').config();
 
 const app = express();
@@ -16,6 +17,9 @@ app.use('/api/auth', authRoutes);
 
 // Favorites routes
 app.use('/api/favorites', favoritesRoutes);
+
+// Admin users management routes
+app.use('/api/admin/users', usersRoutes);
 
 // GET all pets
 app.get('/api/pets', async (req, res) => {

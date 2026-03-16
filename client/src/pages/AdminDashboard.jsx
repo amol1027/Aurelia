@@ -96,7 +96,7 @@ export default function AdminDashboard() {
     ];
 
     const quickActions = [
-        { icon: FaUsers, label: 'Manage Users', description: 'View and manage all users', to: '#' },
+        { icon: FaUsers, label: 'Manage Users', description: 'View and manage all users', to: '/admin/users' },
         { icon: FaDog, label: 'Manage Pets', description: 'View all pet listings', to: '/pets' },
         { icon: FaBuilding, label: 'Manage Shelters', description: 'View shelter details', to: '#' },
         { icon: FaHeart, label: 'Adoptions', description: 'View adoption records', to: '#' },
@@ -120,6 +120,7 @@ export default function AdminDashboard() {
                         <div className="hidden md:flex items-center gap-1">
                             {[
                                 { label: 'Overview', to: '/admin', end: true },
+                                { label: 'Users', to: '/admin/users' },
                                 { label: 'Pets', to: '/pets' },
                                 { label: 'Main Site', to: '/', end: true },
                             ].map(({ label, to, end }) => (
@@ -207,6 +208,7 @@ export default function AdminDashboard() {
                     <nav className="flex flex-col gap-1 px-4 pt-6 flex-1" aria-label="Admin mobile navigation">
                         {[
                             { label: 'Overview', to: '/admin', end: true },
+                            { label: 'Users', to: '/admin/users' },
                             { label: 'Pets', to: '/pets' },
                             { label: 'Main Site', to: '/', end: true },
                         ].map(({ label, to, end }) => (

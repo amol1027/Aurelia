@@ -8,10 +8,12 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ManageUsers from './pages/ManageUsers';
 import Profile from './pages/Profile';
 import Favorites from './pages/Favorites';
 import Pets from './pages/Pets';
 import HowItWorksPage from './pages/HowItWorksPage';
+import PetDetailPage from './pages/PetDetailPage';
 
 function App() {
   const [pets, setPets] = useState([]);
@@ -35,10 +37,12 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/users" element={<ManageUsers />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/favorites" element={<Favorites />} />
                 <Route path="/how-it-works" element={<HowItWorksPage />} />
                 <Route path="/pets" element={<Pets />} />
+                <Route path="/pets/:id" element={<PetDetailPage />} />
               </Routes>
             </div>
           </BrowserRouter>
