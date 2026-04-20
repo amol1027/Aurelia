@@ -3,7 +3,7 @@ import { Link, NavLink, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FaUsers, FaDog, FaBuilding, FaUserShield,
-    FaSignOutAlt, FaHeart
+    FaSignOutAlt, FaHeart, FaComments
 } from 'react-icons/fa';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
 import { useAuth } from '../context/AuthContext';
@@ -97,9 +97,10 @@ export default function AdminDashboard() {
 
     const quickActions = [
         { icon: FaUsers, label: 'Manage Users', description: 'View and manage all users', to: '/admin/users' },
-        { icon: FaDog, label: 'Manage Pets', description: 'View all pet listings', to: '/pets' },
-        { icon: FaBuilding, label: 'Manage Shelters', description: 'View shelter details', to: '#' },
-        { icon: FaHeart, label: 'Adoptions', description: 'View adoption records', to: '#' },
+        { icon: FaDog, label: 'Manage Pets', description: 'View all pet listings', to: '/admin/pets' },
+        { icon: FaBuilding, label: 'Manage Shelters', description: 'View shelter details', to: '/admin/users' },
+        { icon: FaComments, label: 'Messages', description: 'Reply to user and shelter support chats', to: '/admin/messages' },
+        { icon: FaHeart, label: 'Adoptions', description: 'View adoption records', to: '/admin/pets' },
     ];
 
     return (
@@ -120,8 +121,7 @@ export default function AdminDashboard() {
                         <div className="hidden md:flex items-center gap-1">
                             {[
                                 { label: 'Overview', to: '/admin', end: true },
-                                { label: 'Users', to: '/admin/users' },
-                                { label: 'Pets', to: '/pets' },
+                                { label: 'Messages', to: '/admin/messages' },
                                 { label: 'Main Site', to: '/', end: true },
                             ].map(({ label, to, end }) => (
                                 <NavLink
@@ -191,6 +191,7 @@ export default function AdminDashboard() {
                 )}
                 <div
                     className={`fixed top-0 right-0 w-[280px] h-dvh bg-[#FFFDF7] z-[60] flex flex-col
+                            { label: 'Messages', to: '/admin/messages' },
                         shadow-[-8px_0_30px_rgba(0,0,0,0.15)] transition-transform duration-300 ease-out md:hidden
                         ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
                 >
@@ -209,7 +210,7 @@ export default function AdminDashboard() {
                         {[
                             { label: 'Overview', to: '/admin', end: true },
                             { label: 'Users', to: '/admin/users' },
-                            { label: 'Pets', to: '/pets' },
+                            { label: 'List Pets', to: '/admin/pets' },
                             { label: 'Main Site', to: '/', end: true },
                         ].map(({ label, to, end }) => (
                             <NavLink

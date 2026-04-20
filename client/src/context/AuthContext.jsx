@@ -6,6 +6,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('aurelia_token'));
     const [loading, setLoading] = useState(true);
+    const isAuthenticated = Boolean(user && token);
 
     // On mount, verify stored token
     useEffect(() => {
@@ -39,7 +40,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, isAuthenticated, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

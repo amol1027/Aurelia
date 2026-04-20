@@ -5,6 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import Navbar from '../components/Navbar';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^\+?[0-9\s()\-]{10,12}$/;
+
 export default function Register() {
     const { login } = useAuth();
     const { success, error: showError } = useNotification();
@@ -20,27 +23,144 @@ export default function Register() {
         shelterName: '',
         address: '',
     });
-    const [error, setError] = useState('');
+    const [submitError, setSubmitError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({});
+    const [touched, setTouched] = useState({});
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
-    const updateField = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
+    const validateField = (field, value, currentForm, currentRole) => {
+        const trimmed = typeof value === 'string' ? value.trim() : value;
+
+        switch (field) {
+            case 'name':
+                if (!trimmed) return 'Name is required';
+                if (trimmed.length < 2) return 'Name must be at least 2 characters';
+                return '';
+            case 'email':
+                if (!trimmed) return 'Email is required';
+                if (!EMAIL_REGEX.test(trimmed)) return 'Please enter a valid email address';
+                return '';
+            case 'phone':
+                if (!trimmed) return '';
+                if (trimmed.length < 10 || trimmed.length > 12) return 'Phone number must be at least 10 digits.';
+                if (currentForm.phone === '0000000000') return 'Phone number cannot be all zeros';
+                if (!PHONE_REGEX.test(trimmed)) return 'Please enter a valid phone number';
+                return '';
+            case 'shelterName':
+                if (currentRole !== 'shelter') return '';
+                if (!trimmed) return 'Shelter name is required';
+                if (trimmed.length < 3) return 'Shelter name must be at least 3 characters';
+                return '';
+            case 'address':
+                if (currentRole === 'shelter' && !trimmed) return 'Shelter address is required';
+                if (trimmed && trimmed.length < 8) return 'Address should be at least 8 characters';
+                return '';
+            case 'password':
+                if (!value) return 'Password is required';
+                if (value.length < 8) return 'Password must be at least 8 characters';
+                if (!/[A-Z]/.test(value)) return 'Password must include an uppercase letter';
+                if (!/[a-z]/.test(value)) return 'Password must include a lowercase letter';
+                if (!/[0-9]/.test(value)) return 'Password must include a number';
+                return '';
+            case 'confirmPassword':
+                if (!value) return 'Please confirm your password';
+                if (value !== currentForm.password) return 'Passwords do not match';
+                return '';
+            default:
+                return '';
+        }
+    };
+
+    const validateForm = (currentForm, currentRole) => {
+        const fieldsToValidate = ['name', 'email', 'phone', 'password', 'confirmPassword', 'address'];
+        if (currentRole === 'shelter') fieldsToValidate.push('shelterName');
+
+        const nextErrors = {};
+        fieldsToValidate.forEach((field) => {
+            const message = validateField(field, currentForm[field], currentForm, currentRole);
+            if (message) nextErrors[field] = message;
+        });
+
+        return nextErrors;
+    };
+
+    const handleFieldChange = (field, value) => {
+        const nextForm = { ...form, [field]: value };
+        setForm(nextForm);
+
+        if (touched[field] || touched.confirmPassword || (field === 'password' && form.confirmPassword)) {
+            const nextErrors = { ...fieldErrors };
+            const ownError = validateField(field, value, nextForm, role);
+
+            if (ownError) nextErrors[field] = ownError;
+            else delete nextErrors[field];
+
+            if (field === 'password' || field === 'confirmPassword') {
+                const confirmError = validateField('confirmPassword', nextForm.confirmPassword, nextForm, role);
+                if (confirmError) nextErrors.confirmPassword = confirmError;
+                else delete nextErrors.confirmPassword;
+            }
+
+            setFieldErrors(nextErrors);
+        }
+    };
+
+    const handleFieldBlur = (field) => {
+        setTouched((prev) => ({ ...prev, [field]: true }));
+        const message = validateField(field, form[field], form, role);
+        setFieldErrors((prev) => {
+            const next = { ...prev };
+            if (message) next[field] = message;
+            else delete next[field];
+            return next;
+        });
+    };
+
+    const handleRoleChange = (nextRole) => {
+        if (nextRole === role) return;
+
+        setRole(nextRole);
+        setForm({
+            name: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+            phone: '',
+            shelterName: '',
+            address: '',
+        });
+        setFieldErrors({});
+        setTouched({});
+        setSubmitError('');
+    };
+
+    const inputClass = (field, withRightIcon = false) =>
+        `w-full pl-11 ${withRightIcon ? 'pr-10' : 'pr-4'} py-3 rounded-xl bg-warm-bg border text-warm-text text-sm placeholder:text-warm-faded focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${touched[field] && fieldErrors[field]
+            ? 'border-red-300 focus:ring-red-300'
+            : 'border-warm-border focus:ring-primary-400'
+        }`;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
+        setSubmitError('');
 
-        if (form.password !== form.confirmPassword) {
-            const errorMsg = 'Passwords do not match';
-            setError(errorMsg);
-            showError(errorMsg);
-            return;
-        }
+        const validationErrors = validateForm(form, role);
+        setFieldErrors(validationErrors);
+        setTouched({
+            name: true,
+            email: true,
+            phone: true,
+            password: true,
+            confirmPassword: true,
+            shelterName: role === 'shelter',
+            address: true,
+        });
 
-        if (form.password.length < 6) {
-            const errorMsg = 'Password must be at least 6 characters';
-            setError(errorMsg);
+        if (Object.keys(validationErrors).length > 0) {
+            const errorMsg = 'Please fix the highlighted fields';
+            setSubmitError(errorMsg);
             showError(errorMsg);
             return;
         }
@@ -65,7 +185,7 @@ export default function Register() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || 'Registration failed');
+                setSubmitError(data.error || 'Registration failed');
                 showError(data.error || 'Registration failed');
                 setLoading(false);
                 return;
@@ -76,7 +196,7 @@ export default function Register() {
             navigate('/pets');
         } catch {
             const errorMsg = 'Network error. Please try again.';
-            setError(errorMsg);
+            setSubmitError(errorMsg);
             showError(errorMsg);
             setLoading(false);
         }
@@ -114,7 +234,7 @@ export default function Register() {
                     <div className="flex bg-warm-bg rounded-xl p-1 mb-8 border border-warm-border">
                         <button
                             type="button"
-                            onClick={() => setRole('adopter')}
+                            onClick={() => handleRoleChange('adopter')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold
                 transition-all duration-300 ${role === 'adopter'
                                     ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-warm-text shadow-warm-md'
@@ -125,7 +245,7 @@ export default function Register() {
                         </button>
                         <button
                             type="button"
-                            onClick={() => setRole('shelter')}
+                            onClick={() => handleRoleChange('shelter')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold
                 transition-all duration-300 ${role === 'shelter'
                                     ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-warm-text shadow-warm-md'
@@ -136,9 +256,9 @@ export default function Register() {
                         </button>
                     </div>
 
-                    {error && (
+                    {submitError && (
                         <div className="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3 mb-6 border border-red-100">
-                            {error}
+                            {submitError}
                         </div>
                     )}
 
@@ -155,14 +275,15 @@ export default function Register() {
                                     type="text"
                                     required
                                     value={form.name}
-                                    onChange={(e) => updateField('name', e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-warm-bg border border-warm-border
-                    text-warm-text text-sm placeholder:text-warm-faded
-                    focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
-                    transition-all duration-200"
+                                    onChange={(e) => handleFieldChange('name', e.target.value)}
+                                    onBlur={() => handleFieldBlur('name')}
+                                    className={inputClass('name')}
                                     placeholder="Your name"
                                 />
                             </div>
+                            {touched.name && fieldErrors.name && (
+                                <p className="mt-1.5 text-xs text-red-600">{fieldErrors.name}</p>
+                            )}
                         </div>
 
                         {/* Shelter Name — shelter only */}
@@ -178,14 +299,15 @@ export default function Register() {
                                         type="text"
                                         required
                                         value={form.shelterName}
-                                        onChange={(e) => updateField('shelterName', e.target.value)}
-                                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-warm-bg border border-warm-border
-                      text-warm-text text-sm placeholder:text-warm-faded
-                      focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
-                      transition-all duration-200"
+                                        onChange={(e) => handleFieldChange('shelterName', e.target.value)}
+                                        onBlur={() => handleFieldBlur('shelterName')}
+                                        className={inputClass('shelterName')}
                                         placeholder="Happy Paws Shelter"
                                     />
                                 </div>
+                                {touched.shelterName && fieldErrors.shelterName && (
+                                    <p className="mt-1.5 text-xs text-red-600">{fieldErrors.shelterName}</p>
+                                )}
                             </div>
                         )}
 
@@ -201,14 +323,15 @@ export default function Register() {
                                     type="email"
                                     required
                                     value={form.email}
-                                    onChange={(e) => updateField('email', e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-warm-bg border border-warm-border
-                    text-warm-text text-sm placeholder:text-warm-faded
-                    focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
-                    transition-all duration-200"
+                                    onChange={(e) => handleFieldChange('email', e.target.value)}
+                                    onBlur={() => handleFieldBlur('email')}
+                                    className={inputClass('email')}
                                     placeholder="you@example.com"
                                 />
                             </div>
+                            {touched.email && fieldErrors.email && (
+                                <p className="mt-1.5 text-xs text-red-600">{fieldErrors.email}</p>
+                            )}
                         </div>
 
                         {/* Phone */}
@@ -222,38 +345,40 @@ export default function Register() {
                                     id="reg-phone"
                                     type="tel"
                                     value={form.phone}
-                                    onChange={(e) => updateField('phone', e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-warm-bg border border-warm-border
-                    text-warm-text text-sm placeholder:text-warm-faded
-                    focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
-                    transition-all duration-200"
+                                    onChange={(e) => handleFieldChange('phone', e.target.value)}
+                                    onBlur={() => handleFieldBlur('phone')}
+                                    className={inputClass('phone')}
                                     placeholder="+1 (555) 123-4567"
                                 />
                             </div>
+                            {touched.phone && fieldErrors.phone && (
+                                <p className="mt-1.5 text-xs text-red-600">{fieldErrors.phone}</p>
+                            )}
                         </div>
 
-                        {/* Address — shelter only */}
-                        {role === 'shelter' && (
-                            <div>
-                                <label htmlFor="reg-address" className="block text-sm font-medium text-warm-text mb-1.5">
-                                    Shelter Address
-                                </label>
-                                <div className="relative">
-                                    <FaHome className="absolute left-4 top-3.5 text-warm-faded text-sm" />
-                                    <textarea
-                                        id="reg-address"
-                                        value={form.address}
-                                        onChange={(e) => updateField('address', e.target.value)}
-                                        rows={2}
-                                        className="w-full pl-11 pr-4 py-3 rounded-xl bg-warm-bg border border-warm-border
-                      text-warm-text text-sm placeholder:text-warm-faded resize-none
-                      focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
-                      transition-all duration-200"
-                                        placeholder="123 Pet Street, City, State"
-                                    />
-                                </div>
+                        {/* Address */}
+                        <div>
+                            <label htmlFor="reg-address" className="block text-sm font-medium text-warm-text mb-1.5">
+                                {role === 'shelter' ? 'Shelter Address' : 'Address'}{' '}
+                                {role !== 'shelter' && <span className="text-warm-faded">(optional)</span>}
+                            </label>
+                            <div className="relative">
+                                <FaHome className="absolute left-4 top-3.5 text-warm-faded text-sm" />
+                                <textarea
+                                    id="reg-address"
+                                    value={form.address}
+                                    onChange={(e) => handleFieldChange('address', e.target.value)}
+                                    onBlur={() => handleFieldBlur('address')}
+                                    rows={2}
+                                    required={role === 'shelter'}
+                                    className={`w-full pl-11 pr-4 py-3 rounded-xl bg-warm-bg border text-warm-text text-sm placeholder:text-warm-faded resize-none focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${touched.address && fieldErrors.address ? 'border-red-300 focus:ring-red-300' : 'border-warm-border focus:ring-primary-400'}`}
+                                    placeholder={role === 'shelter' ? '123 Pet Street, City, State' : 'Street, City, State'}
+                                />
                             </div>
-                        )}
+                            {touched.address && fieldErrors.address && (
+                                <p className="mt-1.5 text-xs text-red-600">{fieldErrors.address}</p>
+                            )}
+                        </div>
 
                         {/* Password */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -268,12 +393,10 @@ export default function Register() {
                                         type={showPassword ? 'text' : 'password'}
                                         required
                                         value={form.password}
-                                        onChange={(e) => updateField('password', e.target.value)}
-                                        className="w-full pl-11 pr-10 py-3 rounded-xl bg-warm-bg border border-warm-border
-                                            text-warm-text text-sm placeholder:text-warm-faded
-                                            focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
-                                            transition-all duration-200"
-                                        placeholder="Min 6 chars"
+                                        onChange={(e) => handleFieldChange('password', e.target.value)}
+                                        onBlur={() => handleFieldBlur('password')}
+                                        className={inputClass('password', true)}
+                                        placeholder="Min 8 chars"
                                     />
                                     <button
                                         type="button"
@@ -284,6 +407,9 @@ export default function Register() {
                                         {showPassword ? <FaEyeSlash /> : <FaEye />}
                                     </button>
                                 </div>
+                                {touched.password && fieldErrors.password && (
+                                    <p className="mt-1.5 text-xs text-red-600">{fieldErrors.password}</p>
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="reg-confirm" className="block text-sm font-medium text-warm-text mb-1.5">
@@ -296,12 +422,10 @@ export default function Register() {
                                         type={showConfirm ? 'text' : 'password'}
                                         required
                                         value={form.confirmPassword}
-                                        onChange={(e) => updateField('confirmPassword', e.target.value)}
-                                        className="w-full pl-11 pr-10 py-3 rounded-xl bg-warm-bg border border-warm-border
-                                            text-warm-text text-sm placeholder:text-warm-faded
-                                            focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
-                                            transition-all duration-200"
-                                        placeholder="Re-enter"
+                                        onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
+                                        onBlur={() => handleFieldBlur('confirmPassword')}
+                                        className={inputClass('confirmPassword', true)}
+                                        placeholder="Re-enter password"
                                     />
                                     <button
                                         type="button"
@@ -312,6 +436,9 @@ export default function Register() {
                                         {showConfirm ? <FaEyeSlash /> : <FaEye />}
                                     </button>
                                 </div>
+                                {touched.confirmPassword && fieldErrors.confirmPassword && (
+                                    <p className="mt-1.5 text-xs text-red-600">{fieldErrors.confirmPassword}</p>
+                                )}
                             </div>
                         </div>
 

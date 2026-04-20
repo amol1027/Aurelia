@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FaPaw, FaHeart, FaArrowLeft, FaClock, FaDog, FaSignOutAlt,
-    FaChevronRight, FaCheckCircle, FaStar
+    FaChevronRight, FaCheckCircle, FaStar, FaComments
 } from 'react-icons/fa';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
 import { useAuth } from '../context/AuthContext';
@@ -45,7 +45,7 @@ const tagColors = [
 export default function PetDetailPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
     const { toggleFavorite, isFavorite } = useFavorites();
     const { success, info } = useNotification();
 
@@ -54,7 +54,8 @@ export default function PetDetailPage() {
     const [loading, setLoading]   = useState(true);
     const [notFound, setNotFound] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
-    const [adopted, setAdopted]   = useState(false);
+    const showAuthenticatedUi = !authLoading && isAuthenticated;
+    const showGuestUi = !authLoading && !isAuthenticated;
 
     useEffect(() => {
         setLoading(true); setNotFound(false);
@@ -81,10 +82,39 @@ export default function PetDetailPage() {
     };
 
     const handleAdopt = () => {
-        if (!user) { info('Please sign in to start your adoption'); return; }
-        setAdopted(true);
-        success(`Your interest in ${pet.name} has been noted! 🐾`);
-        setTimeout(() => setAdopted(false), 3000);
+        if (!user) { 
+            info('Please sign in to start your adoption'); 
+            navigate('/login');
+            return; 
+        }
+
+        if (Number(user.id) === Number(pet.ownerUserId)) {
+            info('You cannot adopt your own pet listing');
+            return;
+        }
+
+        // Navigate to the adoption application form
+        navigate(`/adopt/${id}`);
+    };
+
+    const handleChatWithOwner = () => {
+        if (!pet.ownerUserId) {
+            info('This listing does not have a registered owner for direct chat yet');
+            return;
+        }
+
+        if (!user) {
+            info('Please sign in to chat with the pet owner');
+            navigate('/login');
+            return;
+        }
+
+        if (Number(user.id) === Number(pet.ownerUserId)) {
+            navigate('/messages');
+            return;
+        }
+
+        navigate(`/messages?petId=${pet.id}`);
     };
 
     const handleLogout = () => { logout(); info('Logged out successfully'); setMenuOpen(false); };
@@ -132,13 +162,13 @@ export default function PetDetailPage() {
                     {menuOpen && <div className="fixed inset-0 bg-black/40 z-[55] md:hidden" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
 
                     <nav className="hidden md:flex items-center gap-8">
-                        {user && <Link to="/dashboard" className="text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">Dashboard</Link>}
+                        {showAuthenticatedUi && <Link to="/dashboard" className="text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">Dashboard</Link>}
                         <Link to="/pets" className="text-sm font-medium text-primary-700 relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-gradient-to-r after:from-primary-500 after:to-primary-700 after:rounded-full">Adopt</Link>
                         <Link to="/how-it-works" className="text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">How It Works</Link>
                     </nav>
 
                     <div className="flex items-center gap-3">
-                        {user ? (
+                        {showAuthenticatedUi ? (
                             <>
                                 <Link to="/profile" className="hidden sm:flex items-center gap-2 bg-white/60 backdrop-blur-md rounded-full pl-1 pr-4 py-1 border border-warm-border/50 hover:border-primary-200 transition-all duration-200">
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-xs font-bold shadow-warm-sm">
@@ -150,12 +180,12 @@ export default function PetDetailPage() {
                                     <FaSignOutAlt className="text-[0.9rem]" />
                                 </button>
                             </>
-                        ) : (
+                        ) : showGuestUi ? (
                             <>
                                 <Link to="/login" className="hidden md:inline text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">Sign In</Link>
                                 <Link to="/register" className="hidden md:inline btn-primary text-sm px-6 py-2.5">Get Started</Link>
                             </>
-                        )}
+                        ) : null}
                         <button className="flex md:hidden items-center justify-center text-warm-text z-[60] p-2 rounded-lg hover:bg-warm-border/30 transition-colors"
                             onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}>
                             {menuOpen ? <HiX size={26} /> : <HiMenuAlt3 size={26} />}
@@ -165,24 +195,24 @@ export default function PetDetailPage() {
                     {/* Mobile menu */}
                     <nav className={`md:hidden fixed top-0 right-0 w-[280px] h-dvh flex flex-col justify-center items-center bg-[#FFFDF7] z-[60] shadow-[-8px_0_30px_rgba(0,0,0,0.15)] transition-transform duration-300 ease-out ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`} aria-label="Mobile navigation">
                         <div className="flex flex-col items-center gap-6 mb-8">
-                            {[{to:'/',label:'Home'}, ...(user?[{to:'/dashboard',label:'Dashboard'}]:[]), {to:'/pets',label:'Adopt'}, {to:'/how-it-works',label:'How It Works'}].map(({to,label}) => (
+                            {[{to:'/',label:'Home'}, ...(showAuthenticatedUi?[{to:'/dashboard',label:'Dashboard'}]:[]), {to:'/pets',label:'Adopt'}, {to:'/how-it-works',label:'How It Works'}].map(({to,label}) => (
                                 <Link key={to} to={to} onClick={() => setMenuOpen(false)} className="relative text-lg font-semibold text-warm-muted hover:text-warm-text transition-colors duration-200 after:content-[''] after:absolute after:bottom-[-2px] after:left-0 after:w-0 after:h-[2px] after:bg-gradient-to-r after:from-primary-500 after:to-primary-700 after:rounded-full after:transition-all after:duration-300 hover:after:w-full">{label}</Link>
                             ))}
                         </div>
                         <div className="flex flex-col items-center gap-3 pt-6 border-t border-warm-border/40 w-[85%]">
-                            {user ? (
+                            {showAuthenticatedUi ? (
                                 <>
                                     <span className="text-base font-semibold text-warm-text">Hi, {user.name.split(' ')[0]} 👋</span>
                                     <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/60 border border-warm-border/50 text-sm font-medium text-warm-text hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-all duration-200">
                                         <FaSignOutAlt /> Logout
                                     </button>
                                 </>
-                            ) : (
+                            ) : showGuestUi ? (
                                 <>
                                     <Link to="/login" onClick={() => setMenuOpen(false)} className="w-full text-center px-8 py-3 rounded-xl bg-white/60 border border-warm-border/50 text-sm font-medium text-warm-text hover:bg-primary-50 transition-all duration-200">Sign In</Link>
                                     <Link to="/register" onClick={() => setMenuOpen(false)} className="w-full text-center btn-primary px-8 py-3 text-sm">Get Started</Link>
                                 </>
-                            )}
+                            ) : null}
                         </div>
                     </nav>
                 </div>
@@ -324,25 +354,33 @@ export default function PetDetailPage() {
 
                             {/* CTA — Hick's Law + Fitts's Law */}
                             <motion.div variants={fadeUp} custom={5} initial="hidden" animate="show" className="mb-3">
-                                <AnimatePresence mode="wait">
-                                    {adopted ? (
-                                        <motion.div key="success" initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0, scale:0.9 }}
-                                            className="w-full flex items-center justify-center gap-2 py-4 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold text-sm">
-                                            <FaCheckCircle /> Application Noted! We'll be in touch.
-                                        </motion.div>
-                                    ) : (
-                                        <motion.button key="adopt" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-                                            onClick={handleAdopt}
-                                            className="w-full flex items-center justify-center gap-2 btn-primary px-10 py-4 text-base rounded-full shadow-warm-md hover:shadow-warm-lg hover:-translate-y-0.5 transition-all duration-300"
-                                            aria-label={`Start adoption process for ${pet.name}`}>
-                                            <FaPaw /> Start Adoption
-                                        </motion.button>
-                                    )}
-                                </AnimatePresence>
+                                <motion.button
+                                    onClick={handleAdopt}
+                                    className="w-full flex items-center justify-center gap-2 btn-primary px-10 py-4 text-base rounded-full shadow-warm-md hover:shadow-warm-lg hover:-translate-y-0.5 transition-all duration-300"
+                                    aria-label={`Start adoption process for ${pet.name}`}>
+                                    <FaPaw /> Start Adoption
+                                </motion.button>
+                            </motion.div>
+
+                            {/* Direct chat with owner */}
+                            <motion.div variants={fadeUp} custom={6} initial="hidden" animate="show" className="mb-3">
+                                <button
+                                    onClick={handleChatWithOwner}
+                                    className="w-full flex items-center justify-center gap-2 px-10 py-3.5 rounded-full text-sm font-semibold border border-primary-300 text-primary-700 bg-primary-50 hover:bg-primary-100 transition-all duration-300"
+                                    aria-label={Number(user?.id) === Number(pet.ownerUserId) ? 'Open messages' : `Chat with ${pet.ownerName || 'owner'}`}
+                                >
+                                    <FaComments />
+                                    {Number(user?.id) === Number(pet.ownerUserId)
+                                        ? 'View Incoming Chats'
+                                        : `Chat With ${pet.ownerName || 'Owner'}`}
+                                </button>
+                                {!pet.ownerUserId && (
+                                    <p className="text-center text-xs text-warm-faded mt-2">Owner chat is currently unavailable for this listing.</p>
+                                )}
                             </motion.div>
 
                             {/* Favourite */}
-                            <motion.div variants={fadeUp} custom={6} initial="hidden" animate="show" className="mb-5">
+                            <motion.div variants={fadeUp} custom={7} initial="hidden" animate="show" className="mb-5">
                                 <button onClick={handleFavorite}
                                     className={`w-full flex items-center justify-center gap-2 px-10 py-3.5 rounded-full text-sm font-semibold border transition-all duration-300 hover:-translate-y-0.5
                                         ${favoured ? 'bg-red-50 text-red-500 border-red-300 hover:bg-red-100' : 'bg-warm-bg text-warm-muted border-warm-border hover:text-red-500 hover:border-red-300 hover:bg-red-50'}`}
@@ -350,7 +388,7 @@ export default function PetDetailPage() {
                                     <FaHeart className={favoured ? 'animate-pulse' : ''} />
                                     {favoured ? 'Saved to Favorites' : 'Save to Favorites'}
                                 </button>
-                                {!user && (
+                                {showGuestUi && (
                                     <p className="text-center text-xs text-warm-faded mt-3">
                                         <Link to="/login" className="text-primary-600 font-semibold hover:underline">Sign in</Link> to save favourites & track applications.
                                     </p>
@@ -358,7 +396,7 @@ export default function PetDetailPage() {
                             </motion.div>
 
                             {/* How It Works nudge */}
-                            <motion.div variants={fadeUp} custom={7} initial="hidden" animate="show"
+                            <motion.div variants={fadeUp} custom={8} initial="hidden" animate="show"
                                 className="p-4 bg-white/50 backdrop-blur-md rounded-2xl border border-white/50 shadow-warm-sm flex items-start gap-3 mb-10">
                                 <FaDog className="text-primary-500 text-lg mt-0.5 shrink-0" />
                                 <div>

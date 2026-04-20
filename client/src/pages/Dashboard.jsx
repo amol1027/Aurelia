@@ -358,17 +358,20 @@ export default function Dashboard() {
 
 /* ── Action card definitions ──────────────────────────────── */
 const adopterActions = [
+    { icon: FaPaw, label: 'List Pets', desc: 'Create and manage your own pet listings.', to: '/my-pets', color: 'from-emerald-400 to-emerald-600', span: 'lg:col-span-4' },
     { icon: FaHeart, label: 'My Favorites', desc: 'Pets you\'ve loved & saved for later.', to: '/favorites', color: 'from-rose-400 to-red-500', span: 'lg:col-span-4' },
-    { icon: FaClipboardList, label: 'Adoption Status', desc: 'Track your adoption applications in real time.', to: null, color: 'from-amber-400 to-orange-500', span: 'lg:col-span-4' },
+    { icon: FaClipboardList, label: 'My Applications', desc: 'Track your adoption applications in real time.', to: '/my-applications', color: 'from-amber-400 to-orange-500', span: 'lg:col-span-4' },
     { icon: FaUserCircle, label: 'My Profile', desc: 'Update your info and preferences.', to: '/profile', color: 'from-accent-400 to-accent-600', span: 'lg:col-span-4' },
-    { icon: FaBookOpen, label: 'How It Works', desc: 'Learn the adoption process step by step.', to: '/how-it-works', color: 'from-emerald-400 to-emerald-600', span: 'lg:col-span-6' },
-    { icon: FaComments, label: 'Contact Support', desc: 'Have questions? We\'re here to help 24/7.', to: null, color: 'from-sky-400 to-blue-500', span: 'lg:col-span-6' },
+    { icon: FaComments, label: 'Messages', desc: 'Chat with pet owners and shelters directly.', to: '/messages', color: 'from-indigo-400 to-blue-500', span: 'lg:col-span-4' },
+    { icon: FaBookOpen, label: 'How It Works', desc: 'Learn the adoption process step by step.', to: '/how-it-works', color: 'from-teal-400 to-emerald-600', span: 'lg:col-span-4' },
+    { icon: FaComments, label: 'Contact Support', desc: 'Have questions? We\'re here to help 24/7.', to: '/support/chat', color: 'from-sky-400 to-blue-500', span: 'lg:col-span-4' },
 ];
 
 const shelterActions = [
-    { icon: FaPlusCircle, label: 'Add New Pet', desc: 'List a new pet for adoption.', to: null, color: 'from-emerald-400 to-emerald-600', span: 'lg:col-span-4' },
-    { icon: FaThList, label: 'Manage Listings', desc: 'Edit or remove your shelter\'s pets.', to: null, color: 'from-amber-400 to-orange-500', span: 'lg:col-span-4' },
-    { icon: FaEnvelopeOpenText, label: 'Applications', desc: 'Review and respond to adoption requests.', to: null, color: 'from-violet-400 to-purple-500', span: 'lg:col-span-4' },
-    { icon: FaHome, label: 'Shelter Profile', desc: 'Update your shelter details and bio.', to: '/profile', color: 'from-accent-400 to-accent-600', span: 'lg:col-span-6' },
-    { icon: FaComments, label: 'Contact Support', desc: 'Need assistance? We\'re always here.', to: null, color: 'from-sky-400 to-blue-500', span: 'lg:col-span-6' },
+    { icon: FaPlusCircle, label: 'Add New Pet', desc: 'List a new pet for adoption.', to: '/shelter/pets', color: 'from-emerald-400 to-emerald-600', span: 'lg:col-span-4' },
+    { icon: FaThList, label: 'Manage Listings', desc: 'Edit or remove your shelter\'s pets.', to: '/shelter/pets', color: 'from-amber-400 to-orange-500', span: 'lg:col-span-4' },
+    { icon: FaEnvelopeOpenText, label: 'Applications', desc: 'Review and respond to adoption requests.', to: '/shelter/applications', color: 'from-violet-400 to-purple-500', span: 'lg:col-span-4' },
+    { icon: FaComments, label: 'Messages', desc: 'Chat with adopters and listing participants.', to: '/messages', color: 'from-indigo-400 to-blue-500', span: 'lg:col-span-4' },
+    { icon: FaHome, label: 'Shelter Profile', desc: 'Update your shelter details and bio.', to: '/profile', color: 'from-accent-400 to-accent-600', span: 'lg:col-span-4' },
+    { icon: FaComments, label: 'Contact Support', desc: 'Need assistance? We\'re always here.', to: '/support/chat', color: 'from-sky-400 to-blue-500', span: 'lg:col-span-4' },
 ];

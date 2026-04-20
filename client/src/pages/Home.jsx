@@ -9,10 +9,10 @@ import CallToAction from '../components/CallToAction';
 import Footer from '../components/Footer';
 
 export default function Home({ pets }) {
-    const { user, loading } = useAuth();
+    const { loading, isAuthenticated } = useAuth();
 
     if (loading) return null;
-    if (user) return <Navigate to="/dashboard" replace />;
+    if (isAuthenticated) return <Navigate to="/dashboard" replace />;
     return (
         <>
             <Navbar />

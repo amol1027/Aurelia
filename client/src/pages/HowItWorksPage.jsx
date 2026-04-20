@@ -139,7 +139,9 @@ function FAQItem({ faq, index }) {
 
 /* ── Page ──────────────────────────────────────────────────── */
 export default function HowItWorksPage() {
-    const { user, logout } = useAuth();
+    const { user, loading, isAuthenticated, logout } = useAuth();
+    const showAuthenticatedUi = !loading && isAuthenticated;
+    const showGuestUi = !loading && !isAuthenticated;
 
     return (
         <div className="min-h-dvh bg-warm-bg">
@@ -154,7 +156,7 @@ export default function HowItWorksPage() {
                     </Link>
 
                     <nav className="hidden md:flex items-center gap-8">
-                        {user && (
+                        {showAuthenticatedUi && (
                             <Link to="/dashboard" className="text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">
                                 Dashboard
                             </Link>
@@ -171,7 +173,7 @@ export default function HowItWorksPage() {
                     </nav>
 
                     <div className="flex items-center gap-3">
-                        {user ? (
+                        {showAuthenticatedUi ? (
                             <>
                                 <Link to="/dashboard"
                                     className="hidden sm:flex items-center gap-2 bg-white/60 backdrop-blur-md
@@ -192,7 +194,7 @@ export default function HowItWorksPage() {
                                     <FaSignOutAlt className="text-[0.9rem]" />
                                 </button>
                             </>
-                        ) : (
+                        ) : showGuestUi ? (
                             <>
                                 <Link to="/login" className="text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">
                                     Sign In
@@ -201,7 +203,7 @@ export default function HowItWorksPage() {
                                     Get Started
                                 </Link>
                             </>
-                        )}
+                        ) : null}
                     </div>
                 </div>
             </header>
@@ -223,8 +225,8 @@ export default function HowItWorksPage() {
                         <motion.div custom={0} variants={fadeUp} initial="hidden" animate="show" className="text-center max-w-2xl mx-auto">
                             {/* Breadcrumb */}
                             <div className="flex items-center justify-center gap-2 text-sm text-warm-faded mb-6">
-                                <Link to={user ? '/dashboard' : '/'} className="hover:text-warm-text transition-colors flex items-center gap-1">
-                                    <FaArrowLeft className="text-xs" /> {user ? 'Dashboard' : 'Home'}
+                                <Link to={showAuthenticatedUi ? '/dashboard' : '/'} className="hover:text-warm-text transition-colors flex items-center gap-1">
+                                    <FaArrowLeft className="text-xs" /> {showAuthenticatedUi ? 'Dashboard' : 'Home'}
                                 </Link>
                                 <span>/</span>
                                 <span className="text-warm-text font-medium">How It Works</span>
@@ -426,7 +428,7 @@ export default function HowItWorksPage() {
                                             transition-all duration-300">
                                         <FaPaw /> Browse Pets <FaArrowRight className="text-xs" />
                                     </Link>
-                                    {!user && (
+                                    {showGuestUi && (
                                         <Link to="/register"
                                             className="inline-flex items-center gap-2 font-semibold text-sm
                                                 bg-white/15 backdrop-blur-sm text-white border border-white/30

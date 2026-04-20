@@ -8,13 +8,15 @@ import { useFavorites } from '../context/FavoritesContext';
 import { useNotification } from '../context/NotificationContext';
 
 export default function Pets() {
-    const { user, logout } = useAuth();
+    const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
     const { toggleFavorite, isFavorite } = useFavorites();
     const { success, info } = useNotification();
     const [pets, setPets] = useState([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [menuOpen, setMenuOpen] = useState(false);
+    const showAuthenticatedUi = !authLoading && isAuthenticated;
+    const showGuestUi = !authLoading && !isAuthenticated;
 
     useEffect(() => {
         fetch('http://localhost:5000/api/pets')
@@ -79,7 +81,7 @@ export default function Pets() {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-8">
-                        {user && (
+                        {showAuthenticatedUi && (
                             <Link to="/dashboard" className="text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">
                                 Dashboard
                             </Link>
@@ -118,7 +120,7 @@ export default function Pets() {
                                     hover:after:w-full">
                                 Home
                             </Link>
-                            {user && (
+                            {showAuthenticatedUi && (
                                 <Link 
                                     to="/dashboard" 
                                     onClick={() => setMenuOpen(false)}
@@ -152,7 +154,7 @@ export default function Pets() {
 
                         {/* Mobile Auth Section */}
                         <div className="flex flex-col items-center gap-3 pt-6 border-t border-warm-border/40 w-[85%]">
-                            {user ? (
+                            {showAuthenticatedUi ? (
                                 <>
                                     <div className="flex flex-col items-center gap-2 mb-3">
                                         <span className="text-base font-semibold text-warm-text">
@@ -195,7 +197,7 @@ export default function Pets() {
                                         <FaSignOutAlt className="text-base" /> Logout
                                     </button>
                                 </>
-                            ) : (
+                            ) : showGuestUi ? (
                                 <>
                                     <Link 
                                         to="/login" 
@@ -216,13 +218,13 @@ export default function Pets() {
                                         Get Started
                                     </Link>
                                 </>
-                            )}
+                            ) : null}
                         </div>
                     </nav>
 
                     {/* Desktop Auth + Mobile Toggle */}
                     <div className="flex items-center gap-3">
-                        {user ? (
+                        {showAuthenticatedUi ? (
                             <>
                                 <Link to="/profile"
                                     className="hidden sm:flex items-center gap-2 bg-white/60 backdrop-blur-md
@@ -243,7 +245,7 @@ export default function Pets() {
                                     <FaSignOutAlt className="text-[0.9rem]" />
                                 </button>
                             </>
-                        ) : (
+                        ) : showGuestUi ? (
                             <>
                                 <Link to="/login" className="hidden md:inline text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">
                                     Sign In
@@ -252,7 +254,7 @@ export default function Pets() {
                                     Get Started
                                 </Link>
                             </>
-                        )}
+                        ) : null}
 
                         {/* Mobile Toggle Button */}
                         <button
@@ -287,7 +289,7 @@ export default function Pets() {
                             Find Your Perfect Companion
                         </h1>
                         <p className="text-warm-muted max-w-[500px] mx-auto">
-                            {user ? `Welcome back, ${user.name.split(' ')[0]}! ` : ''}
+                            {showAuthenticatedUi ? `Welcome back, ${user.name.split(' ')[0]}! ` : ''}
                             Browse all our lovable pets waiting for their forever home.
                         </p>
                     </motion.div>

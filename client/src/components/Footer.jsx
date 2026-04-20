@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { FaPaw, FaHeart, FaInstagram, FaTwitter, FaFacebookF } from 'react-icons/fa';
 import { HiMail, HiArrowRight } from 'react-icons/hi';
 
@@ -9,7 +10,7 @@ export default function Footer() {
 
                 {/* Brand */}
                 <div>
-                    <a href="#hero" className="flex items-center gap-2 font-heading text-2xl font-bold text-white mb-4">
+                    <a href="/#hero" className="flex items-center gap-2 font-heading text-2xl font-bold text-white mb-4">
                         <FaPaw className="text-primary-500 text-xl" />
                         Aurelia
                     </a>
@@ -18,14 +19,14 @@ export default function Footer() {
                     </p>
                     <div className="flex gap-2">
                         {[
-                            { icon: <FaInstagram />, label: 'Instagram' },
-                            { icon: <FaTwitter />, label: 'Twitter' },
-                            { icon: <FaFacebookF />, label: 'Facebook' },
-                            { icon: <HiMail />, label: 'Email' },
+                            { icon: <FaInstagram />, label: 'Instagram', href: '/#testimonials' },
+                            { icon: <FaTwitter />, label: 'Twitter', href: '/#testimonials' },
+                            { icon: <FaFacebookF />, label: 'Facebook', href: '/#testimonials' },
+                            { icon: <HiMail />, label: 'Email', href: '/how-it-works' },
                         ].map((s) => (
                             <a
                                 key={s.label}
-                                href="#"
+                                href={s.href}
                                 className="w-10 h-10 flex items-center justify-center rounded-full
                   bg-white/[0.06] text-white/60 text-sm border border-white/[0.08]
                   hover:bg-primary-500 hover:text-warm-text hover:border-primary-500
@@ -42,16 +43,21 @@ export default function Footer() {
                 <div>
                     <h4 className="text-sm font-semibold text-white mb-6 tracking-wide">Quick Links</h4>
                     <ul className="space-y-2">
-                        {['Available Pets', 'Adoption Process', 'Success Stories', 'Volunteer'].map((link) => (
-                            <li key={link}>
-                                <a
-                                    href="#"
+                        {[
+                            { label: 'Available Pets', to: '/pets' },
+                            { label: 'Adoption Process', to: '/how-it-works' },
+                            { label: 'Success Stories', to: '/#testimonials' },
+                            { label: 'Volunteer', to: '/register' },
+                        ].map((link) => (
+                            <li key={link.label}>
+                                <Link
+                                    to={link.to}
                                     className="text-sm text-white/55 hover:text-primary-400 hover:pl-1
 
                     transition-all duration-200"
                                 >
-                                    {link}
-                                </a>
+                                    {link.label}
+                                </Link>
                             </li>
                         ))}
                     </ul>
@@ -61,15 +67,20 @@ export default function Footer() {
                 <div>
                     <h4 className="text-sm font-semibold text-white mb-6 tracking-wide">Support</h4>
                     <ul className="space-y-2">
-                        {['FAQs', 'Contact Us', 'Donation', 'Partner Shelters'].map((link) => (
-                            <li key={link}>
-                                <a
-                                    href="#"
+                        {[
+                            { label: 'FAQs', to: '/how-it-works' },
+                            { label: 'Contact Us', to: '/profile' },
+                            { label: 'Donation', to: '/register' },
+                            { label: 'Partner Shelters', to: '/register' },
+                        ].map((link) => (
+                            <li key={link.label}>
+                                <Link
+                                    to={link.to}
                                     className="text-sm text-white/55 hover:text-primary-400 hover:pl-1
                     transition-all duration-200"
                                 >
-                                    {link}
-                                </a>
+                                    {link.label}
+                                </Link>
                             </li>
                         ))}
                     </ul>

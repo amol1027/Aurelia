@@ -184,7 +184,7 @@ export default function ManageUsers() {
                             {[
                                 { label: 'Overview', to: '/admin', end: true },
                                 { label: 'Users', to: '/admin/users' },
-                                { label: 'Pets', to: '/pets' },
+                                { label: 'List Pets', to: '/admin/pets' },
                             ].map(({ label, to, end }) => (
                                 <NavLink
                                     key={to + label}
@@ -253,7 +253,7 @@ export default function ManageUsers() {
                         {[
                             { label: 'Overview', to: '/admin', end: true },
                             { label: 'Users', to: '/admin/users' },
-                            { label: 'Pets', to: '/pets' },
+                            { label: 'List Pets', to: '/admin/pets' },
                             { label: 'Main Site', to: '/', end: true },
                         ].map(({ label, to, end }) => (
                             <NavLink

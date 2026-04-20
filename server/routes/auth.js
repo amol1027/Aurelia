@@ -2,7 +2,6 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
-
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'aurelia_secret_key_2024';

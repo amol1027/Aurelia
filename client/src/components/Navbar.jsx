@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
-import { FaPaw, FaSignOutAlt, FaUserShield, FaUserCircle } from 'react-icons/fa';
+import { FaComments, FaPaw, FaSignOutAlt, FaUserShield, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 
 export default function Navbar() {
-    const { user, logout } = useAuth();
+    const { user, token, loading, isAuthenticated, logout } = useAuth();
     const { info } = useNotification();
+    const location = useLocation();
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+    const showAuthenticatedUi = !loading && isAuthenticated;
+    const showGuestUi = !loading && !isAuthenticated;
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
     const handleLogout = () => {
         logout();
@@ -28,11 +33,48 @@ export default function Navbar() {
         return () => { document.body.style.overflow = ''; };
     }, [menuOpen]);
 
+    useEffect(() => {
+        if (!token || !user || user.role === 'admin') {
+            setUnreadMessageCount(0);
+            return;
+        }
+
+        let mounted = true;
+
+        const fetchUnreadCount = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/messages/direct/threads`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) return;
+
+                const data = await response.json();
+                if (!mounted || !Array.isArray(data)) return;
+
+                const unread = data.reduce((total, thread) => total + Number(thread?.unreadCount || 0), 0);
+                setUnreadMessageCount(unread);
+            } catch {
+                // Unread badge is best effort; ignore transient network errors.
+            }
+        };
+
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 10000);
+
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+        };
+    }, [token, user, API_BASE_URL]);
+
     const links = [
-        { label: 'Home', href: '#hero' },
-        { label: 'Adopt', href: '#pets' },
+        { label: 'Home', href: location.pathname === '/' ? '#hero' : '/#hero' },
+        { label: 'Adopt', href: location.pathname === '/' ? '#pets' : '/#pets' },
         { label: 'How It Works', href: '/how-it-works' },
-        { label: 'Stories', href: '#testimonials' },
+        { label: 'Stories', href: location.pathname === '/' ? '#testimonials' : '/#testimonials' },
     ];
 
     return (
@@ -88,7 +130,7 @@ export default function Navbar() {
 
                     {/* Mobile Auth */}
                     <li className="hidden max-md:flex max-md:flex-col max-md:items-center max-md:gap-3 mt-4">
-                        {user ? (
+                        {showAuthenticatedUi ? (
                             <>
                                 <span className="text-sm font-semibold text-warm-text">
                                     Hi, {user.name.split(' ')[0]} 👋
@@ -102,6 +144,10 @@ export default function Navbar() {
                                             className="btn-primary text-sm px-6 py-2">
                                             <FaUserShield /> Admin Panel
                                         </Link>
+                                        <Link to="/admin/pets" onClick={() => setMenuOpen(false)}
+                                            className="btn-secondary text-sm px-6 py-2">
+                                            <FaPaw /> List Pets
+                                        </Link>
                                         <Link to="/dashboard" onClick={() => setMenuOpen(false)}
                                             className="btn-secondary text-sm px-6 py-2">
                                             <FaUserCircle /> User View
@@ -112,6 +158,21 @@ export default function Navbar() {
                                         <Link to="/dashboard" onClick={() => setMenuOpen(false)}
                                             className="btn-primary text-sm px-6 py-2">
                                             <FaUserCircle /> Dashboard
+                                        </Link>
+                                        <Link to="/messages" onClick={() => setMenuOpen(false)}
+                                            className="btn-secondary text-sm px-6 py-2 relative">
+                                            <FaComments /> Messages
+                                            {unreadMessageCount > 0 && (
+                                                <span className="ml-1 inline-flex items-center justify-center min-w-[1.2rem] h-[1.2rem] px-1 text-2xs font-bold text-white bg-red-500 rounded-full">
+                                                    {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                                                </span>
+                                            )}
+                                        </Link>
+                                        <Link
+                                            to={user.role === 'shelter' ? '/shelter/pets' : '/my-pets'}
+                                            onClick={() => setMenuOpen(false)}
+                                                className="btn-secondary text-sm px-6 py-2">
+                                            <FaPaw /> List Pets
                                         </Link>
                                         <Link to="/profile" onClick={() => setMenuOpen(false)}
                                             className="btn-secondary text-sm px-6 py-2">
@@ -126,7 +187,7 @@ export default function Navbar() {
                                     <FaSignOutAlt /> Logout
                                 </button>
                             </>
-                        ) : (
+                        ) : showGuestUi ? (
                             <>
                                 <Link to="/login" onClick={() => setMenuOpen(false)}
                                     className="btn-secondary text-sm px-6 py-2">
@@ -137,13 +198,13 @@ export default function Navbar() {
                                     Get Started
                                 </Link>
                             </>
-                        )}
+                        ) : null}
                     </li>
                 </ul>
 
                 {/* Desktop Auth */}
                 <div className="hidden md:flex items-center gap-3">
-                    {user ? (
+                    {showAuthenticatedUi ? (
                         <>
                             {user.role === 'admin' ? (
                                 <Link to="/admin"
@@ -160,6 +221,33 @@ export default function Navbar() {
                                         text-primary-700 hover:text-primary-800 transition-all duration-200">
                                     <FaUserCircle />
                                     <span className="text-sm font-semibold">Dashboard</span>
+                                </Link>
+                            )}
+                            {(user.role === 'shelter' || user.role === 'adopter') && (
+                                <Link
+                                    to="/messages"
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50
+                                        hover:bg-primary-100 border border-primary-100 hover:border-primary-200
+                                        text-primary-700 hover:text-primary-800 transition-all duration-200 relative"
+                                >
+                                    <FaComments />
+                                    <span className="text-sm font-semibold">Messages</span>
+                                    {unreadMessageCount > 0 && (
+                                        <span className="inline-flex items-center justify-center min-w-[1.2rem] h-[1.2rem] px-1 text-2xs font-bold text-white bg-red-500 rounded-full">
+                                            {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+                                        </span>
+                                    )}
+                                </Link>
+                            )}
+                            {(user.role === 'admin' || user.role === 'shelter' || user.role === 'adopter') && (
+                                <Link
+                                    to={user.role === 'admin' ? '/admin/pets' : user.role === 'shelter' ? '/shelter/pets' : '/my-pets'}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-50
+                                        hover:bg-primary-100 border border-primary-100 hover:border-primary-200
+                                        text-primary-700 hover:text-primary-800 transition-all duration-200"
+                                >
+                                    <FaPaw />
+                                    <span className="text-sm font-semibold">List Pets</span>
                                 </Link>
                             )}
                             <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -181,7 +269,7 @@ export default function Navbar() {
                                 <FaSignOutAlt />
                             </button>
                         </>
-                    ) : (
+                    ) : showGuestUi ? (
                         <>
                             <Link to="/login" className="text-sm font-medium text-warm-muted hover:text-warm-text transition-colors">
                                 Sign In
@@ -190,7 +278,7 @@ export default function Navbar() {
                                 Get Started
                             </Link>
                         </>
-                    )}
+                    ) : null}
                 </div>
 
                 {/* Mobile Toggle */}
