@@ -191,7 +191,6 @@ export default function AdminDashboard() {
                 )}
                 <div
                     className={`fixed top-0 right-0 w-[280px] h-dvh bg-[#FFFDF7] z-[60] flex flex-col
-                            { label: 'Messages', to: '/admin/messages' },
                         shadow-[-8px_0_30px_rgba(0,0,0,0.15)] transition-transform duration-300 ease-out md:hidden
                         ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
                 >
