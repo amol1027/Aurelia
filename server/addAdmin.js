@@ -19,7 +19,7 @@ async function addAdmin() {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Check if admin already exists
+    // Check if admin already exist
     const [existing] = await connection.query('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
         console.log('Admin user already exists.');
