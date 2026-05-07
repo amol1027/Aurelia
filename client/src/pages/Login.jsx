@@ -1,23 +1,23 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { FaPaw, FaEnvelope, FaLock, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import Navbar from '../components/Navbar';
 
 export default function Login() {
-    const { login } = useAuth();
+    const { login, isAuthenticated, user, loading: authLoading } = useAuth();
     const { success, error: showError } = useNotification();
     const navigate = useNavigate();
     const [form, setForm] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        setLoading(true);
+        setSubmitting(true);
 
         try {
             const res = await fetch('http://localhost:5000/api/auth/login', {
@@ -31,14 +31,13 @@ export default function Login() {
             if (!res.ok) {
                 setError(data.error || 'Login failed');
                 showError(data.error || 'Login failed');
-                setLoading(false);
+                setSubmitting(false);
                 return;
             }
 
             login(data.user, data.token);
             success(`Welcome back, ${data.user.name.split(' ')[0]}! 🎉`);
-            
-            // Redirect based on role
+
             if (data.user.role === 'admin') {
                 navigate('/admin');
             } else {
@@ -48,9 +47,18 @@ export default function Login() {
             const errorMsg = 'Network error. Please try again.';
             setError(errorMsg);
             showError(errorMsg);
-            setLoading(false);
+            setSubmitting(false);
         }
     };
+
+    if (authLoading) {
+        return null;
+    }
+
+    if (isAuthenticated) {
+        const redirectPath = user?.role === 'admin' ? '/admin' : '/pets';
+        return <Navigate to={redirectPath} replace />;
+    }
 
     return (
         <>
@@ -142,10 +150,10 @@ export default function Login() {
                         {/* Submit */}
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={submitting}
                             className="w-full btn-primary text-base py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? (
+                            {submitting ? (
                                 <span className="inline-flex items-center gap-2">
                                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />

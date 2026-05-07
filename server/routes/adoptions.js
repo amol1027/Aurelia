@@ -407,4 +407,37 @@ router.get('/shelter/all', authenticateToken, async (req, res) => {
     }
 });
 
+// GET /api/adoptions/admin/all - Get all applications (admin dashboard)
+router.get('/admin/all', authenticateToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ error: 'Access denied - admins only' });
+        }
+
+        const [rows] = await pool.query(
+            `SELECT 
+                a.*,
+                p.name as pet_name,
+                p.breed as pet_breed,
+                p.image as pet_image,
+                u.name as adopter_name,
+                u.email as adopter_email,
+                u.phone as adopter_phone,
+                owner.name as owner_name,
+                owner.role as owner_role,
+                owner.shelter_name as owner_shelter_name
+            FROM adoption_applications a
+            JOIN pets p ON a.pet_id = p.id
+            JOIN users u ON a.adopter_id = u.id
+            LEFT JOIN users owner ON p.owner_user_id = owner.id
+            ORDER BY a.created_at DESC`
+        );
+
+        res.json(rows);
+    } catch (err) {
+        console.error('Get admin applications error:', err.message);
+        res.status(500).json({ error: 'Failed to fetch applications' });
+    }
+});
+
 module.exports = router;

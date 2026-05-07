@@ -267,6 +267,7 @@ export default function AdminMessages() {
                                 { label: 'Users', to: '/admin/users' },
                                 { label: 'List Pets', to: '/admin/pets' },
                                 { label: 'Messages', to: '/admin/messages' },
+                                { label: 'Adoptions', to: '/admin/adoptions' },
                             ].map(({ label, to, end }) => (
                                 <NavLink
                                     key={to + label}
@@ -330,6 +331,7 @@ export default function AdminMessages() {
                             { label: 'Users', to: '/admin/users' },
                             { label: 'List Pets', to: '/admin/pets' },
                             { label: 'Messages', to: '/admin/messages' },
+                            { label: 'Adoptions', to: '/admin/adoptions' },
                             { label: 'Main Site', to: '/', end: true },
                         ].map(({ label, to, end }) => (
                             <NavLink

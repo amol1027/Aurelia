@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react';
 import { Link, NavLink, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    PieChart,
+    Pie,
+    Cell,
+} from 'recharts';
+import {
     FaUsers, FaDog, FaBuilding, FaUserShield,
     FaSignOutAlt, FaHeart, FaComments
 } from 'react-icons/fa';
@@ -100,8 +111,22 @@ export default function AdminDashboard() {
         { icon: FaDog, label: 'Manage Pets', description: 'View all pet listings', to: '/admin/pets' },
         { icon: FaBuilding, label: 'Manage Shelters', description: 'View shelter details', to: '/admin/users' },
         { icon: FaComments, label: 'Messages', description: 'Reply to user and shelter support chats', to: '/admin/messages' },
-        { icon: FaHeart, label: 'Adoptions', description: 'View adoption records', to: '/admin/pets' },
+        { icon: FaHeart, label: 'Adoptions', description: 'View adoption records', to: '/admin/adoptions' },
     ];
+
+    const barData = [
+        { name: 'Users', value: stats.totalUsers },
+        { name: 'Pets', value: stats.totalPets },
+        { name: 'Adopters', value: stats.adopters },
+        { name: 'Shelters', value: stats.shelters },
+    ];
+
+    const pieData = [
+        { name: 'Adopters', value: stats.adopters },
+        { name: 'Shelters', value: stats.shelters },
+    ];
+
+    const pieColors = ['#F97316', '#A855F7'];
 
     return (
         <div className="min-h-dvh bg-warm-bg">
@@ -122,6 +147,7 @@ export default function AdminDashboard() {
                             {[
                                 { label: 'Overview', to: '/admin', end: true },
                                 { label: 'Messages', to: '/admin/messages' },
+                                { label: 'Adoptions', to: '/admin/adoptions' },
                                 { label: 'Main Site', to: '/', end: true },
                             ].map(({ label, to, end }) => (
                                 <NavLink
@@ -210,6 +236,7 @@ export default function AdminDashboard() {
                             { label: 'Overview', to: '/admin', end: true },
                             { label: 'Users', to: '/admin/users' },
                             { label: 'List Pets', to: '/admin/pets' },
+                            { label: 'Adoptions', to: '/admin/adoptions' },
                             { label: 'Main Site', to: '/', end: true },
                         ].map(({ label, to, end }) => (
                             <NavLink
@@ -297,6 +324,77 @@ export default function AdminDashboard() {
                             <p className="text-sm text-warm-muted font-medium">{card.label}</p>
                         </motion.div>
                     ))}
+                </motion.div>
+
+                {/* Insights Charts */}
+                <motion.div
+                    initial="hidden"
+                    animate="show"
+                    variants={fadeUp}
+                    custom={4}
+                    className="mb-10"
+                >
+                    <span className="section-label">Insights</span>
+                    <h2 className="font-heading text-xl md:text-2xl font-bold text-warm-text mb-4">
+                        Admin Insights
+                    </h2>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div className="lg:col-span-2 bg-white rounded-2xl border border-warm-border/60 p-5 shadow-warm-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <p className="text-sm font-semibold text-warm-text">Platform Totals</p>
+                                    <p className="text-xs text-warm-muted">Users, pets, and role split</p>
+                                </div>
+                                <span className="text-xs text-warm-muted">Live counts</span>
+                            </div>
+                            <div className="h-[260px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={barData} barSize={36} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                                        <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                                        <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            cursor={{ fill: 'rgba(226,232,240,0.4)' }}
+                                            contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }}
+                                        />
+                                        <Bar dataKey="value" radius={[10, 10, 10, 10]}>
+                                            {barData.map((entry, index) => (
+                                                <Cell key={`${entry.name}-bar`} fill={index < 2 ? '#FB923C' : '#FDBA74'} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-2xl border border-warm-border/60 p-5 shadow-warm-sm">
+                            <p className="text-sm font-semibold text-warm-text mb-2">User Mix</p>
+                            <p className="text-xs text-warm-muted mb-4">Adopters vs shelters</p>
+                            <div className="h-[220px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={pieData}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            innerRadius={55}
+                                            outerRadius={90}
+                                            paddingAngle={4}
+                                        >
+                                            {pieData.map((entry, index) => (
+                                                <Cell key={`${entry.name}-slice`} fill={pieColors[index % pieColors.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="flex items-center justify-between text-xs text-warm-muted">
+                                <span>Adopters: {stats.adopters}</span>
+                                <span>Shelters: {stats.shelters}</span>
+                            </div>
+                        </div>
+                    </div>
                 </motion.div>
 
                 {/* Quick Actions */}

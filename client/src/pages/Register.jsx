@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { FaPaw, FaEnvelope, FaLock, FaUser, FaPhone, FaHome, FaBuilding, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -9,7 +9,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\+?[0-9\s()\-]{10,12}$/;
 
 export default function Register() {
-    const { login } = useAuth();
+    const { login, isAuthenticated, user, loading: authLoading } = useAuth();
     const { success, error: showError } = useNotification();
     const navigate = useNavigate();
 
@@ -26,7 +26,7 @@ export default function Register() {
     const [submitError, setSubmitError] = useState('');
     const [fieldErrors, setFieldErrors] = useState({});
     const [touched, setTouched] = useState({});
-    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
@@ -165,7 +165,7 @@ export default function Register() {
             return;
         }
 
-        setLoading(true);
+        setSubmitting(true);
 
         try {
             const res = await fetch('http://localhost:5000/api/auth/register', {
@@ -187,20 +187,29 @@ export default function Register() {
             if (!res.ok) {
                 setSubmitError(data.error || 'Registration failed');
                 showError(data.error || 'Registration failed');
-                setLoading(false);
+                setSubmitting(false);
                 return;
             }
 
             login(data.user, data.token);
-            success(`Welcome to Aurelia, ${data.user.name.split(' ')[0]}! 🐾`);
+            success(`Welcome to Aurelia, ${data.user.name.split(' ')[0]}!`);
             navigate('/pets');
         } catch {
             const errorMsg = 'Network error. Please try again.';
             setSubmitError(errorMsg);
             showError(errorMsg);
-            setLoading(false);
+            setSubmitting(false);
         }
     };
+
+    if (authLoading) {
+        return null;
+    }
+
+    if (isAuthenticated) {
+        const redirectPath = user?.role === 'admin' ? '/admin' : '/pets';
+        return <Navigate to={redirectPath} replace />;
+    }
 
     return (
         <>
@@ -286,7 +295,7 @@ export default function Register() {
                             )}
                         </div>
 
-                        {/* Shelter Name — shelter only */}
+                        {/* Shelter Name - shelter only */}
                         {role === 'shelter' && (
                             <div>
                                 <label htmlFor="reg-shelter" className="block text-sm font-medium text-warm-text mb-1.5">
@@ -445,10 +454,10 @@ export default function Register() {
                         {/* Submit */}
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={submitting}
                             className="w-full btn-primary text-base py-3.5 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? (
+                            {submitting ? (
                                 <span className="inline-flex items-center gap-2">
                                     <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />

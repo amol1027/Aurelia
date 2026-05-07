@@ -22,6 +22,7 @@ import PetListingsManager from './pages/PetListingsManager';
 import SupportChat from './pages/SupportChat';
 import AdminMessages from './pages/AdminMessages';
 import UserMessages from './pages/UserMessages';
+import AdminAdoptions from './pages/AdminAdoptions';
 
 function NotFoundPage() {
   return (
@@ -79,6 +80,7 @@ function App() {
                 <Route path="/admin/pets" element={<PetListingsManager />} />
                 <Route path="/support/chat" element={<SupportChat />} />
                 <Route path="/admin/messages" element={<AdminMessages />} />
+                <Route path="/admin/adoptions" element={<AdminAdoptions />} />
                 <Route path="/messages" element={<UserMessages />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
