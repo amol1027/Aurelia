@@ -147,6 +147,8 @@ export default function PetDetailPage() {
     const favoured = isFavorite(pet.id);
     const emoji    = speciesEmoji(pet.breed);
     const isCat    = ['cat','persian','siamese','ragdoll','bengal','maine','scottish','birman'].some(x => pet.breed.toLowerCase().includes(x));
+    const listedByName = pet.ownerShelterName || pet.ownerName || 'Unknown user';
+    const listedByRole = pet.ownerRole ? pet.ownerRole.charAt(0).toUpperCase() + pet.ownerRole.slice(1) : null;
 
     return (
         <div className="min-h-dvh bg-warm-bg">
@@ -337,6 +339,16 @@ export default function PetDetailPage() {
                                         </li>
                                     ))}
                                 </ul>
+                            </motion.div>
+
+                            {/* Listing owner details */}
+                            <motion.div variants={fadeUp} custom={3.5} initial="hidden" animate="show"
+                                className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/60 shadow-warm-sm p-5 mb-4">
+                                <h3 className="font-heading text-sm font-bold text-warm-text mb-2">Listing Details</h3>
+                                <p className="text-sm text-warm-muted">
+                                    <span className="font-semibold text-warm-text">Listed by:</span> {listedByName}
+                                    {listedByRole ? ` (${listedByRole})` : ''}
+                                </p>
                             </motion.div>
 
                             {/* Health checklist */}
