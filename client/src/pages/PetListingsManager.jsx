@@ -3,6 +3,18 @@ import { Link, Navigate } from 'react-router-dom';
 import { FaArrowLeft, FaEdit, FaPlus, FaSave, FaSearch, FaTrash, FaTimes } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import {
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    Tooltip,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+} from 'recharts';
 
 const initialForm = {
     name: '',
@@ -124,6 +136,32 @@ export default function PetListingsManager() {
         });
     }, [ownedPets, search]);
 
+    const roleBreakdown = useMemo(() => {
+        const counts = filteredPets.reduce((acc, pet) => {
+            const roleKey = pet.ownerRole || (user?.role === 'admin' ? 'unassigned' : user?.role) || 'unknown';
+            const label = roleKey === 'shelter' ? 'Shelter' : roleKey === 'adopter' ? 'Adopter' : 'Unassigned';
+            acc[label] = (acc[label] || 0) + 1;
+            return acc;
+        }, {});
+
+        return Object.entries(counts).map(([name, value]) => ({ name, value }));
+    }, [filteredPets, user?.role]);
+
+    const topBreeds = useMemo(() => {
+        const counts = filteredPets.reduce((acc, pet) => {
+            const key = pet.breed || 'Unknown';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+
+        return Object.entries(counts)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 6);
+    }, [filteredPets]);
+
+    const roleColors = ['#FB923C', '#A855F7', '#60A5FA'];
+
     const openCreate = () => {
         setEditingId(null);
         setForm(initialForm);
@@ -228,7 +266,7 @@ export default function PetListingsManager() {
                 <div className="max-w-[1280px] mx-auto px-6 h-[64px] flex items-center justify-between gap-3">
                     <Link
                         to={user.role === 'admin' ? '/admin' : '/dashboard'}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-warm-muted hover:text-warm-text transition-colors"
+                        className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700 transition hover:bg-primary-100 hover:text-primary-800"
                     >
                         <FaArrowLeft className="text-xs" />
                         Back
@@ -264,6 +302,46 @@ export default function PetListingsManager() {
                                 <FaPlus /> Add Listing
                             </button>
                         </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                    <div className="lg:col-span-2 bg-white/80 backdrop-blur-xl border border-white/70 rounded-2xl p-5 shadow-warm-sm">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <p className="text-sm font-semibold text-warm-text">Top Breeds</p>
+                                <p className="text-xs text-warm-muted">Most common listings</p>
+                            </div>
+                            <span className="text-xs text-warm-muted">Live view</span>
+                        </div>
+                        <div className="h-[220px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={topBreeds} barSize={30} margin={{ top: 10, right: 12, left: 0, bottom: 8 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7E5E4" />
+                                    <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                                    <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                                    <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }} />
+                                    <Bar dataKey="value" radius={[10, 10, 10, 10]} fill="#FB923C" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-xl border border-white/70 rounded-2xl p-5 shadow-warm-sm">
+                        <p className="text-sm font-semibold text-warm-text mb-2">Owner Mix</p>
+                        <p className="text-xs text-warm-muted mb-4">Listings by role</p>
+                        <div className="h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={roleBreakdown} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={4}>
+                                        {roleBreakdown.map((entry, index) => (
+                                            <Cell key={`${entry.name}-slice`} fill={roleColors[index % roleColors.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="mt-3 text-xs text-warm-muted">Listings shown: {filteredPets.length}</div>
                     </div>
                 </div>
 

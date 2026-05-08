@@ -4,6 +4,18 @@ import { FaEdit, FaSearch, FaSignOutAlt, FaTrash, FaUserShield, FaUsers } from '
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import {
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    Tooltip,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+} from 'recharts';
 
 function formatDate(value) {
     const date = new Date(value);
@@ -71,6 +83,44 @@ export default function ManageUsers() {
             u.email.toLowerCase().includes(q)
         );
     }, [users, query]);
+
+    const roleData = useMemo(() => {
+        const counts = users.reduce((acc, item) => {
+            const key = item.role === 'shelter' ? 'Shelters' : 'Adopters';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {});
+
+        return [
+            { name: 'Adopters', value: counts.Adopters || 0 },
+            { name: 'Shelters', value: counts.Shelters || 0 },
+        ];
+    }, [users]);
+
+    const monthlySignups = useMemo(() => {
+        const now = new Date();
+        const buckets = [];
+        for (let i = 5; i >= 0; i -= 1) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${date.getFullYear()}-${date.getMonth()}`;
+            const label = date.toLocaleString('en-US', { month: 'short' });
+            buckets.push({ key, name: label, value: 0 });
+        }
+
+        const bucketMap = new Map(buckets.map((item) => [item.key, item]));
+
+        users.forEach((item) => {
+            const created = new Date(item.createdAt || item.created_at);
+            if (Number.isNaN(created.getTime())) return;
+            const key = `${created.getFullYear()}-${created.getMonth()}`;
+            const target = bucketMap.get(key);
+            if (target) target.value += 1;
+        });
+
+        return buckets;
+    }, [users]);
+
+    const roleColors = ['#FB923C', '#A855F7'];
 
     if (loading) return null;
     if (!user) return <Navigate to="/login" replace />;
@@ -290,9 +340,58 @@ export default function ManageUsers() {
                         <span className="section-label">Administration</span>
                         <h1 className="font-heading text-3xl md:text-4xl font-bold text-warm-text">Manage Users</h1>
                         <p className="text-warm-muted mt-2">View, update, and remove adopter and shelter accounts.</p>
+                        <div className="mt-4">
+                            <Link
+                                to="/admin"
+                                className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700 transition hover:bg-primary-100 hover:text-primary-800"
+                            >
+                                <span aria-hidden="true">←</span>
+                                Back to Dashboard
+                            </Link>
+                        </div>
                     </div>
                     <div className="bg-primary-50 border border-primary-100 rounded-xl px-4 py-3 text-sm text-primary-800 font-medium inline-flex items-center gap-2">
                         <FaUsers /> {users.length} user{users.length === 1 ? '' : 's'} loaded
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                    <div className="lg:col-span-2 bg-white rounded-2xl border border-warm-border/60 p-5 shadow-warm-sm">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <p className="text-sm font-semibold text-warm-text">Recent Signups</p>
+                                <p className="text-xs text-warm-muted">Last 6 months</p>
+                            </div>
+                            <span className="text-xs text-warm-muted">Live data</span>
+                        </div>
+                        <div className="h-[220px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={monthlySignups} barSize={34} margin={{ top: 10, right: 12, left: 0, bottom: 8 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7E5E4" />
+                                    <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                                    <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                                    <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }} />
+                                    <Bar dataKey="value" radius={[10, 10, 10, 10]} fill="#FB923C" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                    <div className="bg-white rounded-2xl border border-warm-border/60 p-5 shadow-warm-sm">
+                        <p className="text-sm font-semibold text-warm-text mb-2">Role Mix</p>
+                        <p className="text-xs text-warm-muted mb-4">Adopters vs shelters</p>
+                        <div className="h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={roleData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={4}>
+                                        {roleData.map((entry, index) => (
+                                            <Cell key={`${entry.name}-slice`} fill={roleColors[index % roleColors.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="mt-3 text-xs text-warm-muted">Total users: {users.length}</div>
                     </div>
                 </div>
 

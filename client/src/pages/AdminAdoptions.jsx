@@ -3,6 +3,18 @@ import { Link, NavLink, Navigate } from 'react-router-dom';
 import { FaClipboardList, FaSignOutAlt, FaUserShield } from 'react-icons/fa';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
 import { format } from 'date-fns';
+import {
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    Tooltip,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+} from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import StatusBadge from '../components/StatusBadge';
@@ -74,6 +86,36 @@ export default function AdminAdoptions() {
             return acc;
         }, {});
     }, [applications]);
+
+    const statusChartData = useMemo(() => {
+        const keys = ['pending', 'under_review', 'approved', 'rejected', 'completed', 'withdrawn'];
+        return keys.map((key) => ({ name: key.replace('_', ' '), value: statusCounts[key] || 0 }));
+    }, [statusCounts]);
+
+    const monthlySubmissions = useMemo(() => {
+        const now = new Date();
+        const buckets = [];
+        for (let i = 5; i >= 0; i -= 1) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${date.getFullYear()}-${date.getMonth()}`;
+            const label = date.toLocaleString('en-US', { month: 'short' });
+            buckets.push({ key, name: label, value: 0 });
+        }
+
+        const bucketMap = new Map(buckets.map((item) => [item.key, item]));
+
+        applications.forEach((app) => {
+            const created = new Date(app.created_at);
+            if (Number.isNaN(created.getTime())) return;
+            const key = `${created.getFullYear()}-${created.getMonth()}`;
+            const target = bucketMap.get(key);
+            if (target) target.value += 1;
+        });
+
+        return buckets;
+    }, [applications]);
+
+    const statusColors = ['#F97316', '#FDBA74', '#34D399', '#FCA5A5', '#60A5FA', '#A78BFA'];
 
     const filteredApplications = useMemo(() => {
         if (filter === 'all') return applications;
@@ -208,9 +250,68 @@ export default function AdminAdoptions() {
                     <span className="section-label">Adoption Operations</span>
                     <h1 className="font-heading text-3xl md:text-4xl font-bold text-warm-text mb-2">Adoption Applications</h1>
                     <p className="text-warm-muted text-sm md:text-base">Track every application across shelters and adopters.</p>
+                    <div className="mt-4">
+                        <Link
+                            to="/admin"
+                            className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700 transition hover:bg-primary-100 hover:text-primary-800"
+                        >
+                            <span aria-hidden="true">←</span>
+                            Back to Dashboard
+                        </Link>
+                    </div>
                 </div>
 
                 <section className="bg-white border border-warm-border/60 rounded-3xl shadow-warm-sm p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                        <div className="lg:col-span-2 bg-warm-bg rounded-2xl border border-warm-border/60 p-5">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <p className="text-sm font-semibold text-warm-text">Monthly Submissions</p>
+                                    <p className="text-xs text-warm-muted">Last 6 months</p>
+                                </div>
+                                <span className="text-xs text-warm-muted">Live data</span>
+                            </div>
+                            <div className="h-[240px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={monthlySubmissions} barSize={34} margin={{ top: 10, right: 12, left: 0, bottom: 8 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E7E5E4" />
+                                        <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                                        <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            cursor={{ fill: 'rgba(226,232,240,0.4)' }}
+                                            contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }}
+                                        />
+                                        <Bar dataKey="value" radius={[10, 10, 10, 10]} fill="#FB923C" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                        <div className="bg-warm-bg rounded-2xl border border-warm-border/60 p-5">
+                            <p className="text-sm font-semibold text-warm-text mb-2">Status Mix</p>
+                            <p className="text-xs text-warm-muted mb-4">Application distribution</p>
+                            <div className="h-[220px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={statusChartData}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            innerRadius={55}
+                                            outerRadius={90}
+                                            paddingAngle={3}
+                                        >
+                                            {statusChartData.map((entry, index) => (
+                                                <Cell key={`${entry.name}-slice`} fill={statusColors[index % statusColors.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="mt-3 text-xs text-warm-muted">Total applications: {applications.length}</div>
+                        </div>
+                    </div>
+
                     <div className="flex flex-wrap items-center gap-3 mb-6">
                         {[
                             { key: 'all', label: `All (${applications.length})` },

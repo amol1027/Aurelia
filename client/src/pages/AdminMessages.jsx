@@ -1,9 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, Navigate } from 'react-router-dom';
 import { FaComments, FaPaperPlane, FaSignOutAlt, FaUserShield } from 'react-icons/fa';
 import { HiMenuAlt3, HiX } from 'react-icons/hi';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import {
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    Tooltip,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -201,6 +212,29 @@ export default function AdminMessages() {
         lastTypingSentRef.current = false;
     }, [selectedThreadId]);
 
+    const roleBreakdown = useMemo(() => {
+        const counts = threads.reduce((acc, thread) => {
+            const roleKey = thread.userRole === 'shelter' ? 'Shelters' : 'Adopters';
+            acc[roleKey] = (acc[roleKey] || 0) + 1;
+            return acc;
+        }, {});
+
+        return [
+            { name: 'Adopters', value: counts.Adopters || 0 },
+            { name: 'Shelters', value: counts.Shelters || 0 },
+        ];
+    }, [threads]);
+
+    const unreadSummary = useMemo(() => {
+        const unreadThreads = threads.filter((thread) => Number(thread.unreadCount) > 0).length;
+        return [
+            { name: 'Unread Threads', value: unreadThreads },
+            { name: 'Total Threads', value: threads.length },
+        ];
+    }, [threads]);
+
+    const roleColors = ['#FB923C', '#A855F7'];
+
     const handleLogout = () => {
         logout();
         info('Admin logged out successfully');
@@ -367,6 +401,54 @@ export default function AdminMessages() {
                     <span className="section-label">Messaging Center</span>
                     <h1 className="font-heading text-3xl md:text-4xl font-bold text-warm-text mb-2">Admin Support Inbox</h1>
                     <p className="text-warm-muted text-sm md:text-base">Respond to adopter and shelter messages in real time.</p>
+                    <div className="mt-4">
+                        <Link
+                            to="/admin"
+                            className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700 transition hover:bg-primary-100 hover:text-primary-800"
+                        >
+                            <span aria-hidden="true">←</span>
+                            Back to Dashboard
+                        </Link>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                    <div className="lg:col-span-2 bg-white border border-warm-border/60 rounded-2xl p-5 shadow-warm-sm">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <p className="text-sm font-semibold text-warm-text">Unread Load</p>
+                                <p className="text-xs text-warm-muted">Unread vs total conversations</p>
+                            </div>
+                            <span className="text-xs text-warm-muted">Live snapshot</span>
+                        </div>
+                        <div className="h-[220px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={unreadSummary} barSize={36} margin={{ top: 10, right: 16, left: 0, bottom: 8 }}>
+                                    <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                                    <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+                                    <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }} />
+                                    <Bar dataKey="value" radius={[10, 10, 10, 10]} fill="#FB923C" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                    <div className="bg-white border border-warm-border/60 rounded-2xl p-5 shadow-warm-sm">
+                        <p className="text-sm font-semibold text-warm-text mb-2">Conversation Mix</p>
+                        <p className="text-xs text-warm-muted mb-4">Adopters vs shelters</p>
+                        <div className="h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie data={roleBreakdown} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={4}>
+                                        {roleBreakdown.map((entry, index) => (
+                                            <Cell key={`${entry.name}-slice`} fill={roleColors[index % roleColors.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #E5E7EB' }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="mt-3 text-xs text-warm-muted">Total threads: {threads.length}</div>
+                    </div>
                 </div>
 
                 <section className="bg-white border border-warm-border/60 rounded-3xl shadow-warm-sm overflow-hidden">

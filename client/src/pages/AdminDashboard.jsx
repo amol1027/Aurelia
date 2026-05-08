@@ -293,6 +293,15 @@ export default function AdminDashboard() {
                     <p className="text-warm-muted text-sm md:text-base">
                         Welcome to the Aurelia admin dashboard. Manage your platform here.
                     </p>
+                    <div className="mt-4">
+                        <Link
+                            to="/"
+                            className="inline-flex items-center gap-2 rounded-full border border-primary-100 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700 transition hover:bg-primary-100 hover:text-primary-800"
+                        >
+                            <span aria-hidden="true">←</span>
+                            Back to Main Site
+                        </Link>
+                    </div>
                 </motion.div>
 
                 {/* Stats Cards */}
