@@ -37,6 +37,7 @@ export default function Register() {
             case 'name':
                 if (!trimmed) return 'Name is required';
                 if (trimmed.length < 2) return 'Name must be at least 2 characters';
+                if (!/^[a-zA-Z\s]+$/.test(trimmed)) return 'Name cannot contain special symbols or numbers';
                 return '';
             case 'email':
                 if (!trimmed) return 'Email is required';
@@ -346,7 +347,7 @@ export default function Register() {
                         {/* Phone */}
                         <div>
                             <label htmlFor="reg-phone" className="block text-sm font-medium text-warm-text mb-1.5">
-                                Phone <span className="text-warm-faded">(optional)</span>
+                                Phone <span className="text-warm-faded"></span>
                             </label>
                             <div className="relative">
                                 <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-faded text-sm" />
@@ -369,7 +370,7 @@ export default function Register() {
                         <div>
                             <label htmlFor="reg-address" className="block text-sm font-medium text-warm-text mb-1.5">
                                 {role === 'shelter' ? 'Shelter Address' : 'Address'}{' '}
-                                {role !== 'shelter' && <span className="text-warm-faded">(optional)</span>}
+                                {role !== 'shelter' && <span className="text-warm-faded"></span>}
                             </label>
                             <div className="relative">
                                 <FaHome className="absolute left-4 top-3.5 text-warm-faded text-sm" />
